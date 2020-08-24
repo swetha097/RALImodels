@@ -38,6 +38,7 @@ that wraps the build function.
 import functools
 import tensorflow as tf
 import horovod.tensorflow as hvd
+import numpy as np
 
 from object_detection.data_decoders import tf_example_decoder
 from object_detection.protos import input_reader_pb2
@@ -100,6 +101,78 @@ def read_dataset(file_read_func, input_files, config):
     records_dataset = records_dataset.shuffle(config.shuffle_buffer_size)
   return records_dataset
 
+def get_onehot(image_labels_array, numClasses):
+	one_hot_vector_list = []
+	for label in image_labels_array:
+		one_hot_vector = np.zeros(numClasses)
+		if label[0] != 0:
+			np.put(one_hot_vector, label[0] - 1, 1)
+		one_hot_vector_list.append(one_hot_vector)
+	one_hot_vector_array = np.array(one_hot_vector_list)
+
+	return one_hot_vector_array
+
+def get_weights(num_bboxes):
+	weights_array = np.zeros(100)
+	for pos in list(range(num_bboxes)):
+		np.put(weights_array, pos, 1)
+	
+	return weights_array
+
+def rali_build(iterator, input_reader_config, batch_size = 4):
+  numClasses = 90
+  
+  images_tensor = np.empty([0, 320, 320, 3], dtype = np.float32)
+  true_image_shapes_tensor = np.empty([0, 3], dtype = np.int32)
+  num_groundtruth_boxes_tensor = np.empty([0], dtype = np.int32)
+  groundtruth_boxes_tensor = np.empty([0, 100, 4], dtype = np.float32)
+  groundtruth_classes_tensor = np.empty([0, 100, numClasses], dtype = np.float32)
+  groundtruth_weights_tensor = np.empty([0, 100], dtype = np.float32)
+
+  print("\n######################################################################################################\n")
+  print("\nStarting RALI augmentation pipeline...")
+  for i, (images_array, bboxes_array, labels_array, num_bboxes_array) in enumerate(iterator, 0):
+    images_array = np.transpose(images_array, [0, 2, 3, 1])
+    print("RALI augmentation pipeline - Processing batch %d....." % i)
+    for element in list(range(batch_size)):
+      images_tensor = np.append(images_tensor, np.array([images_array[element]], dtype = np.float32), axis = 0)
+      true_image_shapes_tensor = np.append(true_image_shapes_tensor, np.array([
+        np.array([len(images_array[element]), len(images_array[element,0]), len(images_array[element,0,0])])
+      ], dtype = np.int32), axis = 0)
+      num_groundtruth_boxes_tensor = np.append(num_groundtruth_boxes_tensor, np.array([num_bboxes_array[element]], dtype = np.int32), axis = 0)
+      groundtruth_boxes_tensor = np.append(groundtruth_boxes_tensor, np.array([bboxes_array[element]], dtype = np.float32), axis = 0)
+      groundtruth_classes_tensor = np.append(groundtruth_classes_tensor, np.array([get_onehot(labels_array[element], numClasses)], dtype = np.float32), axis = 0)
+      groundtruth_weights_tensor = np.append(groundtruth_weights_tensor, np.array([get_weights(num_bboxes_array[element])], dtype = np.float32), axis = 0)
+
+    if i >= 1:
+      break
+  
+  features_dict = {
+    "image" : images_tensor,
+    "true_image_shape" : true_image_shapes_tensor
+  }
+  labels_dict = {
+    "num_groundtruth_boxes" : num_groundtruth_boxes_tensor,
+    "groundtruth_boxes" : groundtruth_boxes_tensor,
+    "groundtruth_classes" : groundtruth_classes_tensor,
+    "groundtruth_weights" : groundtruth_weights_tensor
+  }
+  
+  processed_tensors = (features_dict, labels_dict)
+  print("\nPROCESSED_TENSORS:\n",processed_tensors)
+  print("\nFinished RALI augmentation pipeline!\n")
+  print("\n######################################################################################################\n")
+
+  rali_dataset = tf.data.Dataset.from_tensor_slices(processed_tensors)
+  print("\nDATASET after creation:\n",rali_dataset)
+  
+  rali_dataset = rali_dataset.apply(tf.contrib.data.batch_and_drop_remainder(batch_size))
+  print("\nDATASET after batching:\n",rali_dataset)
+  
+  rali_dataset = rali_dataset.prefetch(input_reader_config.num_prefetch_batches)
+  print("\nDATASET after prefetching:\n",rali_dataset)
+
+  return rali_dataset
 
 def build(input_reader_config, batch_size=None, transform_input_data_fn=None, multi_gpu=True):
   """Builds a tf.data.Dataset.
@@ -143,28 +216,49 @@ def build(input_reader_config, batch_size=None, transform_input_data_fn=None, mu
     def process_fn(value):
       """Sets up tf graph that decodes, transforms and pads input data."""
       processed_tensors = decoder.decode(value)
+      print("\n\n\n\n\nprocessed_tensors::",processed_tensors)
+      print("\n\n\n\n\nprocessed_tensors::",type(processed_tensors))
+      
       if transform_input_data_fn is not None:
         processed_tensors = transform_input_data_fn(processed_tensors)
+      print("\n\n\n\n\nprocessed_tensors::",processed_tensors)
+      print("\n\n\n\n\nprocessed_tensors::",type(processed_tensors))
+      
       return processed_tensors
 
     dataset = read_dataset(
         functools.partial(tf.data.TFRecordDataset, buffer_size=8 * 1000 * 1000),
         config.input_path[:], input_reader_config)
+    
+    print("\n\n\n\n\n1st - DATSET::",dataset)
+    print("\n\n\n\n\n1st - TYPE OF DATASET::",type(dataset))
+    
     if multi_gpu:
         dataset = dataset.shard(hvd.size(), hvd.rank())
     # TODO(rathodv): make batch size a required argument once the old binaries
     # are deleted.
+    
     if batch_size:
       num_parallel_calls = batch_size * input_reader_config.num_parallel_batches
     else:
       num_parallel_calls = input_reader_config.num_parallel_map_calls
+    
     dataset = dataset.map(
         process_fn,
         num_parallel_calls=num_parallel_calls)
+    print("\n\n\n\n\n2nd - DATSET::",dataset)
+    print("\n\n\n\n\n2nd - TYPE OF DATASET::",type(dataset))
+    
     if batch_size:
       dataset = dataset.apply(
           tf.contrib.data.batch_and_drop_remainder(batch_size))
+    print("\n\n\n\n\n3rd - DATSET::",dataset)
+    print("\n\n\n\n\n3rd - TYPE OF DATASET::",type(dataset))
+    
     dataset = dataset.prefetch(input_reader_config.num_prefetch_batches)
+    print("\n\n\n\n\nDATSET::",dataset)
+    print("\n\n\n\n\nTYPE OF DATASET::",type(dataset))
+    
     return dataset
 
   raise ValueError('Unsupported input_reader_config.')

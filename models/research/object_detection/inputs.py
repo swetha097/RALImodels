@@ -57,6 +57,7 @@ SERVING_FED_EXAMPLE_KEY = 'serialized_example'
 # A map of names to methods that help build the input pipeline.
 INPUT_BUILDER_UTIL_MAP = {
     'dataset_build': dataset_builder.build,
+    'rali_dataset_build': dataset_builder.rali_build,
 }
 
 
@@ -401,7 +402,7 @@ def _get_features_dict(input_dict):
   return features
 
 
-def create_train_input_fn(train_config, train_input_config,
+def create_train_input_fn(train_iterator, train_config, train_input_config,
                           model_config):
   """Creates a train `input` function for `Estimator`.
 
@@ -494,14 +495,82 @@ def create_train_input_fn(train_config, train_input_config,
           num_classes=config_util.get_number_of_classes(model_config),
           spatial_image_shape=config_util.get_spatial_image_size(
               image_resizer_config))
+      tf.print("\n\n\n\n\ntype(TENSOR_DICT)::\n", type(tensor_dict))
+      tf.print("\n\n\n\n\nTENSOR_DICT::\n", tensor_dict)
+      
       return (_get_features_dict(tensor_dict), _get_labels_dict(tensor_dict))
+    
+    
+    '''
+    # EXPERIMENTAL CODE:
+    def gen():
+      for i,(x,y,z) in enumerate(train_iterator):
+        print("comes here")
+        yield x,y,z
+    bs  = 4
+    output_shape=((bs, 3, 224, 224),  (bs, 1, 4), (bs, 1))
+    ds_series = tf.data.Dataset.from_generator(
+    gen, 
+    output_types=(tf.int32, tf.float32,tf.int32), 
+    output_shapes=output_shape)
+    print(type(ds_series))
+    ds_series
+    ds_series_batch = ds_series.shuffle(20).padded_batch(10,padded_shapes=output_shape)
+    a,b,c= next(iter(ds_series_batch))
+    print(b.numpy())
+    print()
+    print(c.numpy())
+    ends
+    '''
 
+    # '''
+    # RALI_DATASET VERSION:
+    rali_dataset = INPUT_BUILDER_UTIL_MAP['rali_dataset_build'](train_iterator, train_input_config, batch_size=params['batch_size'] if params else train_config.batch_size)
+    # '''
+    
+    '''
+    # TENSORFLOW DATASET VERSION:
     dataset = INPUT_BUILDER_UTIL_MAP['dataset_build'](
         train_input_config,
         transform_input_data_fn=transform_and_pad_input_data_fn,
         batch_size=params['batch_size'] if params else train_config.batch_size,
         multi_gpu=True)
+    '''
+    
+    '''
+    # EXPERIMENTAL CODE:
+    print("\n\n\n\n\nDATSET::",dataset)
+    print("\n\n\n\n\nTYPE OF DATASET::",type(dataset))
+    tf.print("\n\n\n\n\n\n\n\n\n\n\n\nHERE\n\n\n\n\n\n\n\n\n\n")
+    iterator = dataset.make_initializable_iterator()
+    i = 0
+    while i < 2:
+      image_dict, ground_truth_dict = iterator.get_next()
+      tf.print("\n\nimage::", image_dict["image"])
+      tf.print("\n\ntrue_image_shape::", image_dict["true_image_shape"])
+      tf.print("\n\noriginal_image_spatial_shape::", image_dict["original_image_spatial_shape"])
+      tf.print("\n\nnum_groundtruth_boxes::", ground_truth_dict["num_groundtruth_boxes"])
+      tf.print("\n\ngroundtruth_boxes::", ground_truth_dict["groundtruth_boxes"])
+      tf.print("\n\ngroundtruth_classes::", ground_truth_dict["groundtruth_classes"])
+      tf.print("\n\ngroundtruth_area::", ground_truth_dict["groundtruth_area"])
+      i += 1
+    print(iterator.get_next())
+    for x,y in dataset:
+      continue
+      tf.print("\n\n\n\n\nBBOX,LABLES::", x)
+      print("\n\n\n\n\nBBOX,LABLES::\n\n")
+      print(x,y)
+    '''
+    
+    # '''
+    # RALI_DATASET VERSION RETURNING:
+    return rali_dataset
+    # '''
+
+    '''
+    # TENSORFLOW DATASET VERSION RETURNING:
     return dataset
+    '''
 
   return _train_input_fn
 

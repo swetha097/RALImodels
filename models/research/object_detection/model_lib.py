@@ -502,7 +502,8 @@ def create_model_fn(detection_model_fn, configs, hparams, use_tpu=False):
   return model_fn
 
 
-def create_estimator_and_inputs(run_config,
+def create_estimator_and_inputs(iterator,
+                                run_config,
                                 hparams,
                                 pipeline_config_path,
                                 eval_count=1,
@@ -616,6 +617,7 @@ def create_estimator_and_inputs(run_config,
 
   # Create the input functions for TRAIN/EVAL/PREDICT.
   train_input_fn = create_train_input_fn(
+      train_iterator=iterator,
       train_config=train_config,
       train_input_config=train_input_config,
       model_config=model_config)
