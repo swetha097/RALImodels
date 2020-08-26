@@ -1,0 +1,189 @@
+WARNING:tensorflow:From /usr/local/lib/python3.6/dist-packages/horovod/tensorflow/__init__.py:163: The name tf.global_variables is deprecated. Please use tf.compat.v1.global_variables instead.
+
+WARNING:tensorflow:From /usr/local/lib/python3.6/dist-packages/horovod/tensorflow/__init__.py:189: The name tf.get_default_graph is deprecated. Please use tf.compat.v1.get_default_graph instead.
+
+WARNING:tensorflow:
+The TensorFlow contrib module will not be included in TensorFlow 2.0.
+For more information, please see:
+  * https://github.com/tensorflow/community/blob/master/rfcs/20180907-contrib-sunset.md
+  * https://github.com/tensorflow/addons
+  * https://github.com/tensorflow/io (for I/O related ops)
+If you depend on functionality not listed there, please file an issue.
+
+WARNING:tensorflow:From /media/RALImodels/models/research/slim/nets/inception_resnet_v2.py:373: The name tf.GraphKeys is deprecated. Please use tf.compat.v1.GraphKeys instead.
+
+WARNING:tensorflow:From /media/RALImodels/models/research/slim/nets/mobilenet/mobilenet.py:389: The name tf.nn.avg_pool is deprecated. Please use tf.nn.avg_pool2d instead.
+
+WARNING:tensorflow:From /media/RALImodels/models/research/object_detection/builders/dataset_builder.py:45: The name tf.enable_eager_execution is deprecated. Please use tf.compat.v1.enable_eager_execution instead.
+
+WARNING:tensorflow:From ./object_detection/model_main.py:323: The name tf.app.run is deprecated. Please use tf.compat.v1.app.run instead.
+
+[INF]  {compute_optimum_internal_batch_size}  Can run 80 threads simultaneously on this machine
+[INF]  {compute_optimum_internal_batch_size}  User batch size 4 Internal batch size set to 4
+Pipeline has been created succesfully
+WARNING:tensorflow:From ./object_detection/model_main.py:122: The name tf.FixedLenFeature is deprecated. Please use tf.io.FixedLenFeature instead.
+
+W0825 10:14:06.252969 139687939180352 module_wrapper.py:139] From ./object_detection/model_main.py:122: The name tf.FixedLenFeature is deprecated. Please use tf.io.FixedLenFeature instead.
+
+WARNING:tensorflow:From ./object_detection/model_main.py:125: The name tf.VarLenFeature is deprecated. Please use tf.io.VarLenFeature instead.
+
+W0825 10:14:06.253141 139687939180352 module_wrapper.py:139] From ./object_detection/model_main.py:125: The name tf.VarLenFeature is deprecated. Please use tf.io.VarLenFeature instead.
+
+rali "cpu" variant
+Reading for object detection - file_name:: /media/ssdTraining/coco_1tfrEachOriginal/train/coco_train.record-00000-of-00100
+[INF]  {raliJpegTFRecordSource}  Internal buffer size width = 1280 height = 1280 depth = 3
+[INF]  {output_routine} [INF]  {compute_optimum_internal_batch_size}   Can run 80 threads simultaneously on this machine
+[INF]  {compute_optimum_internal_batch_size}  User batch size 4 Internal batch size set to 4
+Output routine started with 1184 to load
+Pipeline has been created succesfully
+rali "cpu" variant
+Reading for object detection - file_name:: /media/ssdTraining/coco_1tfrEachOriginal/val/coco_val.record-00000-of-00010
+[INF]  {raliJpegTFRecordSource}  Internal buffer size width = 1280 height = 1280 depth = 3
+[INF]  {output_routine}  Output routine started with 500 to load
+WARNING:tensorflow:From ./object_detection/model_main.py:248: The name tf.logging.set_verbosity is deprecated. Please use tf.compat.v1.logging.set_verbosity instead.
+
+W0825 10:14:06.683089 139687939180352 module_wrapper.py:139] From ./object_detection/model_main.py:248: The name tf.logging.set_verbosity is deprecated. Please use tf.compat.v1.logging.set_verbosity instead.
+
+WARNING:tensorflow:From ./object_detection/model_main.py:248: The name tf.logging.INFO is deprecated. Please use tf.compat.v1.logging.INFO instead.
+
+W0825 10:14:06.683319 139687939180352 module_wrapper.py:139] From ./object_detection/model_main.py:248: The name tf.logging.INFO is deprecated. Please use tf.compat.v1.logging.INFO instead.
+
+WARNING:tensorflow:From ./object_detection/model_main.py:258: The name tf.ConfigProto is deprecated. Please use tf.compat.v1.ConfigProto instead.
+
+W0825 10:14:06.894588 139687939180352 module_wrapper.py:139] From ./object_detection/model_main.py:258: The name tf.ConfigProto is deprecated. Please use tf.compat.v1.ConfigProto instead.
+
+WARNING:tensorflow:From /media/RALImodels/models/research/object_detection/utils/config_util.py:94: The name tf.gfile.GFile is deprecated. Please use tf.io.gfile.GFile instead.
+
+W0825 10:14:06.897033 139687939180352 module_wrapper.py:139] From /media/RALImodels/models/research/object_detection/utils/config_util.py:94: The name tf.gfile.GFile is deprecated. Please use tf.io.gfile.GFile instead.
+
+WARNING:tensorflow:From /media/RALImodels/models/research/object_detection/model_lib.py:592: The name tf.logging.warning is deprecated. Please use tf.compat.v1.logging.warning instead.
+
+W0825 10:14:06.905460 139687939180352 module_wrapper.py:139] From /media/RALImodels/models/research/object_detection/model_lib.py:592: The name tf.logging.warning is deprecated. Please use tf.compat.v1.logging.warning instead.
+
+WARNING:tensorflow:Forced number of epochs for all eval validations to be 1.
+W0825 10:14:06.905703 139687939180352 model_lib.py:593] Forced number of epochs for all eval validations to be 1.
+WARNING:tensorflow:From /media/RALImodels/models/research/object_detection/utils/config_util.py:480: The name tf.logging.info is deprecated. Please use tf.compat.v1.logging.info instead.
+
+W0825 10:14:06.905922 139687939180352 module_wrapper.py:139] From /media/RALImodels/models/research/object_detection/utils/config_util.py:480: The name tf.logging.info is deprecated. Please use tf.compat.v1.logging.info instead.
+
+INFO:tensorflow:Maybe overwriting train_steps: None
+I0825 10:14:06.906062 139687939180352 config_util.py:480] Maybe overwriting train_steps: None
+INFO:tensorflow:Maybe overwriting sample_1_of_n_eval_examples: 1
+I0825 10:14:06.906191 139687939180352 config_util.py:480] Maybe overwriting sample_1_of_n_eval_examples: 1
+INFO:tensorflow:Maybe overwriting eval_num_epochs: 1
+I0825 10:14:06.906332 139687939180352 config_util.py:480] Maybe overwriting eval_num_epochs: 1
+INFO:tensorflow:Maybe overwriting load_pretrained: True
+I0825 10:14:06.906445 139687939180352 config_util.py:480] Maybe overwriting load_pretrained: True
+INFO:tensorflow:Ignoring config override key: load_pretrained
+I0825 10:14:06.906559 139687939180352 config_util.py:490] Ignoring config override key: load_pretrained
+WARNING:tensorflow:Expected number of evaluation epochs is 1, but instead encountered `eval_on_train_input_config.num_epochs` = 0. Overwriting `num_epochs` to 1.
+W0825 10:14:06.908537 139687939180352 model_lib.py:609] Expected number of evaluation epochs is 1, but instead encountered `eval_on_train_input_config.num_epochs` = 0. Overwriting `num_epochs` to 1.
+INFO:tensorflow:create_estimator_and_inputs: use_tpu False, export_to_tpu False
+I0825 10:14:06.908669 139687939180352 model_lib.py:645] create_estimator_and_inputs: use_tpu False, export_to_tpu False
+INFO:tensorflow:Using config: {'_model_dir': '/media/ssdTraining/checkpoints_swetha/checkpoints_backup/', '_tf_random_seed': None, '_save_summary_steps': 100, '_save_checkpoints_steps': 200000, '_save_checkpoints_secs': None, '_session_config': gpu_options {
+  per_process_gpu_memory_fraction: 0.9
+  visible_device_list: "0"
+}
+, '_keep_checkpoint_max': 5, '_keep_checkpoint_every_n_hours': 10000, '_log_step_count_steps': 100, '_train_distribute': None, '_device_fn': None, '_protocol': None, '_eval_distribute': None, '_experimental_distribute': None, '_experimental_max_worker_delay_secs': None, '_session_creation_timeout_secs': 7200, '_service': None, '_cluster_spec': <tensorflow.python.training.server_lib.ClusterSpec object at 0x7f0a2a9c8b00>, '_task_type': 'worker', '_task_id': 0, '_global_id_in_cluster': 0, '_master': '', '_evaluation_master': '', '_is_chief': True, '_num_ps_replicas': 0, '_num_worker_replicas': 1}
+I0825 10:14:06.909153 139687939180352 estimator.py:212] Using config: {'_model_dir': '/media/ssdTraining/checkpoints_swetha/checkpoints_backup/', '_tf_random_seed': None, '_save_summary_steps': 100, '_save_checkpoints_steps': 200000, '_save_checkpoints_secs': None, '_session_config': gpu_options {
+  per_process_gpu_memory_fraction: 0.9
+  visible_device_list: "0"
+}
+, '_keep_checkpoint_max': 5, '_keep_checkpoint_every_n_hours': 10000, '_log_step_count_steps': 100, '_train_distribute': None, '_device_fn': None, '_protocol': None, '_eval_distribute': None, '_experimental_distribute': None, '_experimental_max_worker_delay_secs': None, '_session_creation_timeout_secs': 7200, '_service': None, '_cluster_spec': <tensorflow.python.training.server_lib.ClusterSpec object at 0x7f0a2a9c8b00>, '_task_type': 'worker', '_task_id': 0, '_global_id_in_cluster': 0, '_master': '', '_evaluation_master': '', '_is_chief': True, '_num_ps_replicas': 0, '_num_worker_replicas': 1}
+WARNING:tensorflow:Estimator's model_fn (<function create_model_fn.<locals>.model_fn at 0x7f0a2a9ca400>) includes params argument, but params are not passed to Estimator.
+W0825 10:14:06.909501 139687939180352 model_fn.py:630] Estimator's model_fn (<function create_model_fn.<locals>.model_fn at 0x7f0a2a9ca400>) includes params argument, but params are not passed to Estimator.
+WARNING:tensorflow:From /usr/local/lib/python3.6/dist-packages/tensorflow_core/python/training/training_util.py:236: Variable.initialized_value (from tensorflow.python.ops.variables) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use Variable.read_value. Variables in 2.X are initialized automatically both in eager and graph (inside tf.defun) contexts.
+W0825 10:14:06.918764 139687939180352 deprecation.py:323] From /usr/local/lib/python3.6/dist-packages/tensorflow_core/python/training/training_util.py:236: Variable.initialized_value (from tensorflow.python.ops.variables) is deprecated and will be removed in a future version.
+Instructions for updating:
+Use Variable.read_value. Variables in 2.X are initialized automatically both in eager and graph (inside tf.defun) contexts.
+
+######################################################################################################
+
+
+Starting RALI augmentation pipeline...
+[INF]  {output_routine}  Output routine started with 1184 to load
+RALI augmentation pipeline - Processing batch 0.....
+WARNING:tensorflow:From /media/RALImodels/models/research/object_detection/builders/dataset_builder.py:162: The name tf.random_uniform is deprecated. Please use tf.random.uniform instead.
+
+W0825 10:14:07.006060 139687939180352 module_wrapper.py:139] From /media/RALImodels/models/research/object_detection/builders/dataset_builder.py:162: The name tf.random_uniform is deprecated. Please use tf.random.uniform instead.
+
+randdddddddddddddom source id: Tensor("AsString:0", shape=(), dtype=string, device=/device:CPU:0)
+out_string Tensor("cond/Merge:0", shape=(), dtype=string, device=/device:CPU:0)
+WARNING:tensorflow:From /media/RALImodels/models/research/object_detection/builders/dataset_builder.py:176: The name tf.string_to_hash_bucket_fast is deprecated. Please use tf.strings.to_hash_bucket_fast instead.
+
+W0825 10:14:07.016148 139687939180352 module_wrapper.py:139] From /media/RALImodels/models/research/object_detection/builders/dataset_builder.py:176: The name tf.string_to_hash_bucket_fast is deprecated. Please use tf.strings.to_hash_bucket_fast instead.
+
+WARNING:tensorflow:From /media/RALImodels/models/research/object_detection/builders/dataset_builder.py:224: The name tf.Session is deprecated. Please use tf.compat.v1.Session instead.
+
+W0825 10:14:07.017619 139687939180352 module_wrapper.py:139] From /media/RALImodels/models/research/object_detection/builders/dataset_builder.py:224: The name tf.Session is deprecated. Please use tf.compat.v1.Session instead.
+
+2020-08-25 10:14:07.018052: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libhip_hcc.so
+2020-08-25 10:14:09.096297: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1650] Found device 0 with properties: 
+name: Vega 20
+AMDGPU ISA: gfx906
+memoryClockRate (GHz) 1.8
+pciBusID 0000:1d:00.0
+2020-08-25 10:14:09.096431: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1650] Found device 1 with properties: 
+name: Vega 20
+AMDGPU ISA: gfx906
+memoryClockRate (GHz) 1.8
+pciBusID 0000:20:00.0
+2020-08-25 10:14:09.096460: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1650] Found device 2 with properties: 
+name: Vega 20
+AMDGPU ISA: gfx906
+memoryClockRate (GHz) 1.8
+pciBusID 0000:23:00.0
+2020-08-25 10:14:09.096479: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1650] Found device 3 with properties: 
+name: Vega 20
+AMDGPU ISA: gfx906
+memoryClockRate (GHz) 1.8
+pciBusID 0000:26:00.0
+2020-08-25 10:14:09.708260: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library librocblas.so
+2020-08-25 10:14:09.710905: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libMIOpen.so
+2020-08-25 10:14:10.571125: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library librocfft.so
+2020-08-25 10:14:10.574813: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library librocrand.so
+2020-08-25 10:14:10.575063: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1767] Adding visible gpu devices: 0, 1, 2, 3
+Traceback (most recent call last):
+  File "./object_detection/model_main.py", line 323, in <module>
+    tf.app.run()
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/platform/app.py", line 40, in run
+    _run(main=main, argv=argv, flags_parser=_parse_flags_tolerate_undef)
+  File "/usr/local/lib/python3.6/dist-packages/absl/app.py", line 299, in run
+    _run_main(main, args)
+  File "/usr/local/lib/python3.6/dist-packages/absl/app.py", line 250, in _run_main
+    sys.exit(main(argv))
+  File "./object_detection/model_main.py", line 315, in main
+    steps=train_steps // FLAGS.eval_count)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_estimator/python/estimator/estimator.py", line 370, in train
+    loss = self._train_model(input_fn, hooks, saving_listeners)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_estimator/python/estimator/estimator.py", line 1161, in _train_model
+    return self._train_model_default(input_fn, hooks, saving_listeners)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_estimator/python/estimator/estimator.py", line 1188, in _train_model_default
+    input_fn, ModeKeys.TRAIN))
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_estimator/python/estimator/estimator.py", line 1025, in _get_features_and_labels_from_input_fn
+    self._call_input_fn(input_fn, mode))
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_estimator/python/estimator/estimator.py", line 1116, in _call_input_fn
+    return input_fn(**kwargs)
+  File "/media/RALImodels/models/research/object_detection/inputs.py", line 529, in _train_input_fn
+    rali_dataset = INPUT_BUILDER_UTIL_MAP['rali_dataset_build'](train_iterator, train_input_config, batch_size=params['batch_size'] if params else train_config.batch_size)
+  File "/media/RALImodels/models/research/object_detection/builders/dataset_builder.py", line 224, in rali_build
+    hash_key = generate_hash_key().eval(session=tf.Session())
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/client/session.py", line 1585, in __init__
+    super(Session, self).__init__(target, graph, config=config)
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/client/session.py", line 674, in __init__
+    config = context.context().config
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/eager/context.py", line 801, in config
+    self._initialize_physical_devices()
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/eager/context.py", line 1054, in _initialize_physical_devices
+    devs = pywrap_tensorflow.TF_ListPhysicalDevices()
+KeyboardInterrupt
+Exception ignored in: <bound method BaseSession.__del__ of <tensorflow.python.client.session.Session object at 0x7f0b6d44a240>>
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.6/dist-packages/tensorflow_core/python/client/session.py", line 761, in __del__
+AttributeError: 'Session' object has no attribute '_session'
+
+real	0m7.161s
+user	0m15.796s
+sys	0m11.174s

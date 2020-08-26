@@ -39,7 +39,10 @@ import functools
 import tensorflow as tf
 import horovod.tensorflow as hvd
 import numpy as np
+# HASH_KEY = 'hash'
+# HASH_BINS = 1 << 31
 
+# tf.enable_eager_execution()
 from object_detection.data_decoders import tf_example_decoder
 from object_detection.protos import input_reader_pb2
 
@@ -119,36 +122,126 @@ def get_weights(num_bboxes):
 	
 	return weights_array
 
-def rali_build(iterator, input_reader_config, batch_size = 4):
-  numClasses = 90
+def get_shapes(image_array):
   
+  return len(image_array), len(image_array[0]), len(image_array[0,0])
+
+def get_normalized(image_bboxes, image_height, image_width):
+  image_bboxes_normalized = np.empty([0, 4], dtype = np.float32)
+  for element in image_bboxes:
+    image_bboxes_normalized = np.append(image_bboxes_normalized, np.array([
+      [
+        element[1] / image_height,
+        element[0] / image_width,
+        (element[1] + element[3]) / image_height,
+        (element[0] + element[2]) / image_width
+      ]
+    ], dtype = np.float32), axis = 0)
+  
+  return image_bboxes_normalized
+
+# def _replace_empty_string_with_random_number(string_tensor):
+#   """Returns string unchanged if non-empty, and random string tensor otherwise.
+
+#   The random string is an integer 0 and 2**63 - 1, casted as string.
+
+
+#   Args:
+#     string_tensor: A tf.tensor of dtype string.
+
+#   Returns:
+#     out_string: A tf.tensor of dtype string. If string_tensor contains the empty
+#       string, out_string will contain a random integer casted to a string.
+#       Otherwise string_tensor is returned unchanged.
+
+#   """
+
+#   empty_string = tf.constant('', dtype=tf.string, name='EmptyString')
+
+#   random_source_id = tf.as_string(
+#       tf.random_uniform(shape=[], maxval=2**63 - 1, dtype=tf.int64))
+#   # print("randdddddddddddddom source id:",random_source_id)
+#   out_string = tf.cond(
+#       tf.equal(string_tensor, empty_string),
+#       true_fn=lambda: random_source_id,
+#       false_fn=lambda: string_tensor)
+#   # print("out_string",out_string)
+#   return out_string
+
+
+
+# def generate_hash_key():
+#     source_id = _replace_empty_string_with_random_number('')
+#   #  print("HASH BINS",HASH_BINS)
+#     hash_from_source_id = tf.string_to_hash_bucket_fast([source_id], HASH_BINS)
+# #    print("hash from source id",hash_from_source_id)
+#  #   print(tf.cast(hash_from_source_id, tf.int32))
+# #    exit(0)
+#     return hash_from_source_id
+
+# def normalize_bbox_values(bboxes_np,batch_size):
+#     htot, wtot = 320, 320
+#     print("\n\nBEFORE NORMALIZATION BBOX VALUES:\n\n",bboxes_np)
+#     for i in range(batch_size):
+#        # bbox_sizes = []
+#     #    print("\n\nBEFORE NORMALIZATION BBOX VALUES:\n\n",bboxes_np)
+#         for j in range(len(bboxes_np[i])):
+            
+#             l =  bboxes_np[i][j][0]
+#             t = bboxes_np[i][j][1]
+#             w = bboxes_np[i][j][2]
+#             h = bboxes_np[i][j][3]
+#             r = l + w
+#             b = t + h
+#             bboxes_np[i][j][0] =l/wtot
+#             bboxes_np[i][j][1] = t/htot
+#             bboxes_np[i][j][2] = r/wtot
+#             bboxes_np[i][j][3] = b/wtot
+#            # bbox_size = (l/wtot, t/htot, r/wtot, b/htot)
+#            # bbox_sizes.append(bbox_size)
+#     print("\n\nNORMALIZED BBOX VALUES:\n\n",bboxes_np)
+#     return bboxes_np
+
+def rali_build(iterator, input_reader_config, batch_size = 4):
+  # global_step = tf.train.get_global_step()
+	# print ("\n\n\nGLOBAL STEP =", global_step)
+  # tf.print ("\n\n\nGLOBAL STEP =", global_step)
+  numClasses = 90
   images_tensor = np.empty([0, 320, 320, 3], dtype = np.float32)
   true_image_shapes_tensor = np.empty([0, 3], dtype = np.int32)
   num_groundtruth_boxes_tensor = np.empty([0], dtype = np.int32)
   groundtruth_boxes_tensor = np.empty([0, 100, 4], dtype = np.float32)
   groundtruth_classes_tensor = np.empty([0, 100, numClasses], dtype = np.float32)
   groundtruth_weights_tensor = np.empty([0, 100], dtype = np.float32)
+  # hash_key_tensor = np.empty([0], dtype = np.int32)
+  hash_key_tensor = []
 
   print("\n######################################################################################################\n")
   print("\nStarting RALI augmentation pipeline...")
+  sourceID = 1000000
   for i, (images_array, bboxes_array, labels_array, num_bboxes_array) in enumerate(iterator, 0):
     images_array = np.transpose(images_array, [0, 2, 3, 1])
+    # bboxes_array = normalize_bbox_values(bboxes_array, batch_size)
     print("RALI augmentation pipeline - Processing batch %d....." % i)
     for element in list(range(batch_size)):
+      # hash_key = generate_hash_key().eval(session=tf.Session())
+      # print("hash_key::",hash_key)
+      # hash_key_tensor = np.append(hash_key_tensor,hash_key,axis = 0)
+      hash_key_tensor.append(str(sourceID))
       images_tensor = np.append(images_tensor, np.array([images_array[element]], dtype = np.float32), axis = 0)
-      true_image_shapes_tensor = np.append(true_image_shapes_tensor, np.array([
-        np.array([len(images_array[element]), len(images_array[element,0]), len(images_array[element,0,0])])
-      ], dtype = np.int32), axis = 0)
       num_groundtruth_boxes_tensor = np.append(num_groundtruth_boxes_tensor, np.array([num_bboxes_array[element]], dtype = np.int32), axis = 0)
-      groundtruth_boxes_tensor = np.append(groundtruth_boxes_tensor, np.array([bboxes_array[element]], dtype = np.float32), axis = 0)
+      true_image_shapes_tensor = np.append(true_image_shapes_tensor, np.array([get_shapes(images_array[element])], dtype = np.int32), axis = 0)
+      groundtruth_boxes_tensor = np.append(groundtruth_boxes_tensor, np.array([get_normalized(bboxes_array[element], len(images_array[element]), len(images_array[element,0]))], dtype = np.float32), axis = 0)
       groundtruth_classes_tensor = np.append(groundtruth_classes_tensor, np.array([get_onehot(labels_array[element], numClasses)], dtype = np.float32), axis = 0)
       groundtruth_weights_tensor = np.append(groundtruth_weights_tensor, np.array([get_weights(num_bboxes_array[element])], dtype = np.float32), axis = 0)
+      sourceID += 1
 
-    if i >= 1:
-      break
+    # if i >= 1:
+    #   break
   
   features_dict = {
     "image" : images_tensor,
+    "hash" : hash_key_tensor,
     "true_image_shape" : true_image_shapes_tensor
   }
   labels_dict = {
@@ -159,18 +252,20 @@ def rali_build(iterator, input_reader_config, batch_size = 4):
   }
   
   processed_tensors = (features_dict, labels_dict)
-  print("\nPROCESSED_TENSORS:\n",processed_tensors)
+  # print("\nPROCESSED_TENSORS:\n",processed_tensors)
   print("\nFinished RALI augmentation pipeline!\n")
   print("\n######################################################################################################\n")
 
   rali_dataset = tf.data.Dataset.from_tensor_slices(processed_tensors)
-  print("\nDATASET after creation:\n",rali_dataset)
+  # print("\nDATASET after creation:\n",rali_dataset)
   
   rali_dataset = rali_dataset.apply(tf.contrib.data.batch_and_drop_remainder(batch_size))
-  print("\nDATASET after batching:\n",rali_dataset)
+  # print("\nDATASET after batching:\n",rali_dataset)
   
   rali_dataset = rali_dataset.prefetch(input_reader_config.num_prefetch_batches)
-  print("\nDATASET after prefetching:\n",rali_dataset)
+  # print("\nDATASET after prefetching:\n",rali_dataset)
+
+  # exit()
 
   return rali_dataset
 

@@ -69,7 +69,7 @@ flags.DEFINE_integer('sample_1_of_n_eval_on_train_examples', 5, 'Will sample '
 										 'one of every n train input examples for evaluation, '
 										 'where n is provided. This is only used if '
 										 '`eval_training_data` is True.')
-flags.DEFINE_integer('eval_count', 1, 'How many times the evaluation should be run')
+flags.DEFINE_integer('eval_count', 10, 'How many times the evaluation should be run')
 flags.DEFINE_string(
 		'hparams_overrides', None, 'Hyperparameter overrides, '
 		'represented as a string containing comma-separated '
@@ -114,9 +114,9 @@ class DLLoggerHook(tf.estimator.SessionRunHook):
 		}
 		dllogger.log(step=tuple(), data=summary)
 
-class HybridPipe(Pipeline):
+class HybridTrainPipe(Pipeline):
 	def __init__(self, feature_key_map, tfrecordreader_type, batch_size, num_threads, device_id, data_dir, crop, rali_cpu = True):
-		super(HybridPipe, self).__init__(batch_size, num_threads, device_id, seed=12 + device_id,rali_cpu=rali_cpu)
+		super(HybridTrainPipe, self).__init__(batch_size, num_threads, device_id, seed=12 + device_id,rali_cpu=rali_cpu)
 		self.input = ops.TFRecordReader(path=data_dir, index_path = "", reader_type=tfrecordreader_type, user_feature_key_map=feature_key_map, 
 			features={
 				'image/encoded':tf.FixedLenFeature((), tf.string, ""),
@@ -161,11 +161,60 @@ class HybridPipe(Pipeline):
 		output = self.cmnp(images, mirror=rng)
 		return [output, labels]
 
+class HybridValPipe(Pipeline):
+        def __init__(self, feature_key_map, tfrecordreader_type, batch_size, num_threads, device_id, data_dir, crop, rali_cpu = True):
+                super(HybridValPipe, self).__init__(batch_size, num_threads, device_id, seed=12 + device_id,rali_cpu=rali_cpu)
+                self.input = ops.TFRecordReader(path=data_dir, index_path = "", reader_type=tfrecordreader_type, user_feature_key_map=feature_key_map,
+                        features={
+                                'image/encoded':tf.FixedLenFeature((), tf.string, ""),
+                                'image/class/label':tf.FixedLenFeature([1], tf.int64,  -1),
+                                'image/class/text':tf.FixedLenFeature([ ], tf.string, ''),
+                                'image/object/bbox/xmin':tf.VarLenFeature(dtype=tf.float32),
+                                'image/object/bbox/ymin':tf.VarLenFeature(dtype=tf.float32),
+                                'image/object/bbox/xmax':tf.VarLenFeature(dtype=tf.float32),
+                                'image/object/bbox/ymax':tf.VarLenFeature(dtype=tf.float32),
+                                'image/filename':tf.FixedLenFeature((), tf.string, "")
+                        }
+                )
+                rali_device = 'cpu' if rali_cpu else 'gpu'
+                decoder_device = 'cpu' if rali_cpu else 'mixed'
+                device_memory_padding = 211025920 if decoder_device == 'mixed' else 0
+                host_memory_padding = 140544512 if decoder_device == 'mixed' else 0
+                self.decode = ops.ImageDecoder(user_feature_key_map=feature_key_map,
+                device=decoder_device, output_type=types.RGB)
+                # self.decode = ops.ImageDecoderRandomCrop(user_feature_key_map=feature_key_map,
+                #                                                                                 device=decoder_device, output_type=types.RGB,
+                #                                                                                 device_memory_padding=device_memory_padding,
+                #                                                                                 host_memory_padding=host_memory_padding,
+                #                                                                                 random_aspect_ratio=[0.8, 1.25],
+                #                                                                                 random_area=[0.1, 1.0],
+                #                                                                                 num_attempts=100)
+                self.res = ops.Resize(device=rali_device, resize_x=crop, resize_y=crop)
+                self.cmnp = ops.CropMirrorNormalize(device="cpu",
+                                                                                        output_dtype=types.FLOAT,
+                                                                                        output_layout=types.NCHW,
+                                                                                        crop=(crop, crop),
+                                                                                        image_type=types.RGB,
+                                                                                        mean=[0.485 * 255,0.456 * 255,0.406 * 255],
+                                                                                        std=[0.229 * 255,0.224 * 255,0.225 * 255])
+                self.coin = ops.CoinFlip(probability=0.5)
+                print('rali "{0}" variant'.format(rali_device))
+
+        def define_graph(self):
+                inputs = self.input(name ="Reader")
+                images = inputs["image/encoded"]
+                labels = inputs["image/class/label"]
+                images = self.decode(images)
+                images = self.res(images)
+                rng = self.coin()
+                output = self.cmnp(images, mirror=rng)
+                return [output, labels]
 
 def main(unused_argv):
 	
-	imagePath = "/media/ssdTraining/coco_1tfr/"
-	bs = 2
+	trainImagePath = "/media/ssdTraining/coco_1tfrEachOriginal/train/"
+	valImagePath = "/media/ssdTraining/coco_1tfrEachOriginal/val/"
+	bs = 4
 	nt = 1
 	di = 0
 	raliCPU = True
@@ -182,10 +231,15 @@ def main(unused_argv):
 		'image/filename':'image/filename'
 	}
 
-	pipe = HybridPipe(feature_key_map=featureKeyMap, tfrecordreader_type=TFRecordReaderType, batch_size=bs, num_threads=nt, device_id=di, data_dir=imagePath, crop=cropSize, rali_cpu=raliCPU) 
-	pipe.build()
-	
-	imageIterator =  RALIIterator(pipe)	
+
+	train_pipe = HybridTrainPipe(feature_key_map=featureKeyMap, tfrecordreader_type=TFRecordReaderType, batch_size=bs, num_threads=nt, device_id=di, data_dir=trainImagePath, crop=cropSize, rali_cpu=raliCPU) 
+	train_pipe.build()	
+	train_imageIterator =  RALIIterator(train_pipe)
+
+	val_pipe = HybridValPipe(feature_key_map=featureKeyMap, tfrecordreader_type=TFRecordReaderType, batch_size=bs, num_threads=nt, device_id=di, data_dir=valImagePath, crop=cropSize, rali_cpu=raliCPU)
+	val_pipe.build()
+	val_imageIterator = RALIIterator(val_pipe)
+
 	
 	tf.logging.set_verbosity(tf.logging.INFO)
 	if FLAGS.amp:
@@ -206,7 +260,8 @@ def main(unused_argv):
 	config = tf.estimator.RunConfig(model_dir=model_dir, session_config=session_config)
 
 	train_and_eval_dict = model_lib.create_estimator_and_inputs(
-		iterator=imageIterator,
+		train_iterator=train_imageIterator,
+		val_iterator=val_imageIterator,
 		run_config=config,
 		eval_count=FLAGS.eval_count,
 		hparams=model_hparams.create_hparams(FLAGS.hparams_overrides),
@@ -254,6 +309,10 @@ def main(unused_argv):
 			estimator.train(train_input_fn,
 							hooks=train_hooks,
 							steps=train_steps // FLAGS.eval_count)
+			
+			# global_step = estimator.get_variable_value("global_step")
+			# print ("\n\n\nGLOBAL STEP =", global_step)
+			
 			if hvd.rank() == 0:
 				eval_input_fn = eval_input_fns[0]
 				results = estimator.evaluate(eval_input_fn,

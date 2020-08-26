@@ -495,8 +495,9 @@ def create_train_input_fn(train_iterator, train_config, train_input_config,
           num_classes=config_util.get_number_of_classes(model_config),
           spatial_image_shape=config_util.get_spatial_image_size(
               image_resizer_config))
-      tf.print("\n\n\n\n\ntype(TENSOR_DICT)::\n", type(tensor_dict))
-      tf.print("\n\n\n\n\nTENSOR_DICT::\n", tensor_dict)
+      tf.print("TENSOR_DICT for 1 image preocessed")
+      # tf.print("\n\n\n\n\ntype(TENSOR_DICT)::\n", type(tensor_dict))
+      # tf.print("\n\n\n\n\nTENSOR_DICT::\n", tensor_dict)
       
       return (_get_features_dict(tensor_dict), _get_labels_dict(tensor_dict))
     
@@ -567,15 +568,15 @@ def create_train_input_fn(train_iterator, train_config, train_input_config,
     return rali_dataset
     # '''
 
-    '''
+    #'''
     # TENSORFLOW DATASET VERSION RETURNING:
-    return dataset
-    '''
+    #return dataset
+    #'''
 
   return _train_input_fn
 
 
-def create_eval_input_fn(eval_config, eval_input_config, model_config):
+def create_eval_input_fn(val_iterator, eval_config, eval_input_config, model_config):
   """Creates an eval `input` function for `Estimator`.
 
   Args:
@@ -657,12 +658,30 @@ def create_eval_input_fn(eval_config, eval_input_config, model_config):
           spatial_image_shape=config_util.get_spatial_image_size(
               image_resizer_config))
       return (_get_features_dict(tensor_dict), _get_labels_dict(tensor_dict))
+
+    # '''
+    # RALI_DATASET VERSION:
+    rali_dataset = INPUT_BUILDER_UTIL_MAP['rali_dataset_build'](val_iterator, eval_input_config, batch_size=params['batch_size'] if params else eval_config.batch_size)
+    # '''
+    
+    '''
+    # TENSORFLOW DATASET VERSION:
     dataset = INPUT_BUILDER_UTIL_MAP['dataset_build'](
         eval_input_config,
         batch_size=params['batch_size'] if params else eval_config.batch_size,
         transform_input_data_fn=transform_and_pad_input_data_fn,
         multi_gpu=False)
-    return dataset
+    '''
+    
+    # '''
+    # RALI_DATASET VERSION RETURNING:
+    return rali_dataset
+    # '''
+
+    #'''
+    # TENSORFLOW DATASET VERSION RETURNING:
+    #return dataset
+    #'''
 
   return _eval_input_fn
 
