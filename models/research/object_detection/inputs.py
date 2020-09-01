@@ -60,6 +60,16 @@ INPUT_BUILDER_UTIL_MAP = {
     'rali_dataset_build': dataset_builder.rali_build,
 }
 
+class IteratorInitializerHook(tf.train.SessionRunHook):
+    """Hook to initialise data iterator after Session is created."""
+
+    def __init__(self):
+        super(IteratorInitializerHook, self).__init__()
+        self.iterator_initializer_func = None
+
+    def after_create_session(self, session, coord):
+        """Initialise the iterator after the session has been created."""
+        self.iterator_initializer_func(session)
 
 def transform_input_data(tensor_dict,
                          model_preprocess_fn,
@@ -402,7 +412,7 @@ def _get_features_dict(input_dict):
   return features
 
 
-def create_train_input_fn(train_iterator, train_config, train_input_config,
+def create_train_input_fn(rali_train_iterator, rali_batch_size, train_config, train_input_config,
                           model_config):
   """Creates a train `input` function for `Estimator`.
 
@@ -415,6 +425,7 @@ def create_train_input_fn(train_iterator, train_config, train_input_config,
     `input_fn` for `Estimator` in TRAIN mode.
   """
 
+  # iterator_initializer_hook = IteratorInitializerHook()
   def _train_input_fn(params=None):
     """Returns `features` and `labels` tensor dictionaries for training.
 
@@ -526,7 +537,8 @@ def create_train_input_fn(train_iterator, train_config, train_input_config,
 
     # '''
     # RALI_DATASET VERSION:
-    rali_dataset = INPUT_BUILDER_UTIL_MAP['rali_dataset_build'](train_iterator, train_input_config, batch_size=params['batch_size'] if params else train_config.batch_size)
+    # rali_dataset = INPUT_BUILDER_UTIL_MAP['rali_dataset_build'](enum=rali_train_iterator, input_reader_config=train_input_config, iterator_initializer_hook=iterator_initializer_hook, rali_batch_size=rali_batch_size, batch_size=params['batch_size'] if params else train_config.batch_size)
+    rali_dataset = INPUT_BUILDER_UTIL_MAP['rali_dataset_build'](enum=rali_train_iterator, input_reader_config=train_input_config, rali_batch_size=rali_batch_size, batch_size=params['batch_size'] if params else train_config.batch_size)
     # '''
     
     '''
@@ -573,10 +585,11 @@ def create_train_input_fn(train_iterator, train_config, train_input_config,
     #return dataset
     #'''
 
+  # return _train_input_fn, iterator_initializer_hook
   return _train_input_fn
 
 
-def create_eval_input_fn(val_iterator, eval_config, eval_input_config, model_config):
+def create_eval_input_fn(rali_val_iterator, rali_batch_size, eval_config, eval_input_config, model_config):
   """Creates an eval `input` function for `Estimator`.
 
   Args:
@@ -661,7 +674,7 @@ def create_eval_input_fn(val_iterator, eval_config, eval_input_config, model_con
 
     # '''
     # RALI_DATASET VERSION:
-    rali_dataset = INPUT_BUILDER_UTIL_MAP['rali_dataset_build'](val_iterator, eval_input_config, batch_size=params['batch_size'] if params else eval_config.batch_size)
+    rali_dataset = INPUT_BUILDER_UTIL_MAP['rali_dataset_build'](enum=rali_val_iterator, input_reader_config=eval_input_config, rali_batch_size=rali_batch_size, batch_size=params['batch_size'] if params else eval_config.batch_size)
     # '''
     
     '''
