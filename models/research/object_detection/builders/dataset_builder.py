@@ -47,6 +47,7 @@ import multiprocessing as mp
 from object_detection.data_decoders import tf_example_decoder
 from object_detection.protos import input_reader_pb2
 
+import object_detection.rali as rali
 
 def make_initializable_iterator(dataset):
   """Creates an iterator, and initializes tables.
@@ -165,10 +166,8 @@ def rali_parallelized_tensor_generator(data_tuple):
   groundtruth_classes_tensor, 
   groundtruth_weights_tensor]
 
-def rali_processed_tensors_generator(rali_batch_size, num_classes, enum):
+def rali_processed_train_tensors_generator(rali_batch_size, num_classes, iterator):
   
-  # global_step = tf.train.get_global_step()
-
   result = []
   hash_key_tensor = []
   images_tensor = []
@@ -179,15 +178,94 @@ def rali_processed_tensors_generator(rali_batch_size, num_classes, enum):
   groundtruth_weights_tensor = []
 
   pool = mp.Pool(mp.cpu_count())
-  # sourceID = 1000000 + (global_step * batch_size)
-
   flag = True
+  count = 0
 
   while flag == True:
+    
     try:
-      i, (images_array, bboxes_array, labels_array, num_bboxes_array) = enum.__next__()
+      i, (images_array, bboxes_array, labels_array, num_bboxes_array) = rali.RALI_TRAIN_ENUM.__next__()
     except:
-      break
+      rali.initialize_enumerator(iterator, 0)
+      i, (images_array, bboxes_array, labels_array, num_bboxes_array) = rali.RALI_TRAIN_ENUM.__next__()
+    
+    print("RALI augmentation pipeline - Processing RALI batch %d....." % i)
+    
+    sourceID = 1000000 + (i * rali_batch_size)
+    
+    images_array = np.transpose(images_array, [0, 2, 3, 1])
+
+    result = pool.map(rali_parallelized_tensor_generator, np.array([
+        [images_array[element], bboxes_array[element], labels_array[element], num_bboxes_array[element], sourceID + element, num_classes] for element in list(range(rali_batch_size))
+        ]))
+
+    for image_data in result:
+      hash_key_tensor.append(image_data[0])
+      images_tensor.append(image_data[1])
+      num_groundtruth_boxes_tensor.append(image_data[2])
+      true_image_shapes_tensor.append(image_data[3])
+      groundtruth_boxes_tensor.append(image_data[4])
+      groundtruth_classes_tensor.append(image_data[5])
+      groundtruth_weights_tensor.append(image_data[6])
+    
+    count += 1
+
+    flag = not(count % int(1536 / rali_batch_size) == 0)
+
+  pool.close()
+  
+  # FOR THE "CALLING rali_processed_tensors_generator() VERSION"
+
+  features_dict = {
+    "image" : np.array(images_tensor, dtype=np.float32),
+    "hash" : np.array(hash_key_tensor),
+    "true_image_shape" : np.array(true_image_shapes_tensor, dtype=np.int32)
+  }
+  labels_dict = {
+    "num_groundtruth_boxes" : np.array(num_groundtruth_boxes_tensor, dtype=np.int32),
+    "groundtruth_boxes" : np.array(groundtruth_boxes_tensor, dtype=np.float32),
+    "groundtruth_classes" : np.array(groundtruth_classes_tensor, dtype=np.float32),
+    "groundtruth_weights" : np.array(groundtruth_weights_tensor, dtype=np.float32)
+  }
+
+  processed_tensors = (features_dict, labels_dict)
+
+  # FOR THE "WITH INITIALIZABLE ITERATOR VERSION"
+
+  # processed_tensors = (
+  #   np.array(images_tensor, dtype=np.float32),
+  #   np.array(hash_key_tensor),
+  #   np.array(true_image_shapes_tensor, dtype=np.int32),
+  #   np.array(num_groundtruth_boxes_tensor, dtype=np.int32),
+  #   np.array(groundtruth_boxes_tensor, dtype=np.float32),
+  #   np.array(groundtruth_classes_tensor, dtype=np.float32),
+  #   np.array(groundtruth_weights_tensor, dtype=np.float32)
+  # )
+  
+  return processed_tensors
+
+def rali_processed_val_tensors_generator(rali_batch_size, num_classes, iterator):
+  
+  result = []
+  hash_key_tensor = []
+  images_tensor = []
+  num_groundtruth_boxes_tensor = []
+  true_image_shapes_tensor = []
+  groundtruth_boxes_tensor = []
+  groundtruth_classes_tensor = []
+  groundtruth_weights_tensor = []
+
+  pool = mp.Pool(mp.cpu_count())
+  flag = True
+  count = 0
+
+  while flag == True:
+
+    try:
+      i, (images_array, bboxes_array, labels_array, num_bboxes_array) = rali.RALI_VAL_ENUM.__next__()
+    except:
+      rali.initialize_enumerator(iterator, 1)
+      i, (images_array, bboxes_array, labels_array, num_bboxes_array) = rali.RALI_VAL_ENUM.__next__()
 
     print("RALI augmentation pipeline - Processing RALI batch %d....." % i)
     
@@ -208,16 +286,12 @@ def rali_processed_tensors_generator(rali_batch_size, num_classes, enum):
       groundtruth_classes_tensor.append(image_data[5])
       groundtruth_weights_tensor.append(image_data[6])
     
-    flag = not(i % int(1500 / rali_batch_size) == 0)
+    count += 1
+
+    flag = not(count % int(1536 / rali_batch_size) == 0)
 
   pool.close()
-
-
-
-
   
-  # FOR THE "CALLING rali_processed_tensors_generator() VERSION"
-
   features_dict = {
     "image" : np.array(images_tensor, dtype=np.float32),
     "hash" : np.array(hash_key_tensor),
@@ -231,26 +305,17 @@ def rali_processed_tensors_generator(rali_batch_size, num_classes, enum):
   }
 
   processed_tensors = (features_dict, labels_dict)
-
-  
-
-  # FOR THE "WITH INITIALIZABLE ITERATOR VERSION"
-
-  # processed_tensors = (
-  #   np.array(images_tensor, dtype=np.float32),
-  #   np.array(hash_key_tensor),
-  #   np.array(true_image_shapes_tensor, dtype=np.int32),
-  #   np.array(num_groundtruth_boxes_tensor, dtype=np.int32),
-  #   np.array(groundtruth_boxes_tensor, dtype=np.float32),
-  #   np.array(groundtruth_classes_tensor, dtype=np.float32),
-  #   np.array(groundtruth_weights_tensor, dtype=np.float32)
-  # )
   
   return processed_tensors
 
+
+
+
+
+
 # def rali_build(enum, input_reader_config, iterator_initializer_hook, rali_batch_size=32, batch_size = 4):
-def rali_build(enum, input_reader_config, rali_batch_size=32, batch_size = 4):
-  # global_step = tf.train.get_global_step()
+def rali_train_build(iterator, input_reader_config, rali_batch_size=32, batch_size = 4):
+  # global_step_inside = tf.train.get_or_create_global_step()
   # print ("\n\n\n\nGLOBAL STEP =", global_step)
   # tf.print ("\n\n\n\nGLOBAL STEP =", global_step)
   num_classes = 90
@@ -377,7 +442,7 @@ def rali_build(enum, input_reader_config, rali_batch_size=32, batch_size = 4):
 
   # CALLING rali_processed_tensors_generator() VERSION
   # '''
-  rali_dataset = tf.data.Dataset.from_tensor_slices(rali_processed_tensors_generator(rali_batch_size = rali_batch_size, num_classes = num_classes, enum = enum))
+  rali_dataset = tf.data.Dataset.from_tensor_slices(rali_processed_train_tensors_generator(rali_batch_size = rali_batch_size, num_classes = num_classes, iterator = iterator))
   # print("\nDATASET after creation:\n",rali_dataset)
   
   rali_dataset = rali_dataset.apply(tf.contrib.data.batch_and_drop_remainder(batch_size))
@@ -509,6 +574,27 @@ def rali_build(enum, input_reader_config, rali_batch_size=32, batch_size = 4):
 
   return rali_dataset
   # return tf.compat.v1.data.make_one_shot_iterator(rali_dataset)
+
+
+def rali_val_build(iterator, input_reader_config, rali_batch_size=32, batch_size = 4):
+  
+  num_classes = 90
+  
+  # CALLING rali_processed_tensors_generator() VERSION
+  # '''
+  rali_dataset = tf.data.Dataset.from_tensor_slices(rali_processed_val_tensors_generator(rali_batch_size = rali_batch_size, num_classes = num_classes, iterator = iterator))
+  # print("\nDATASET after creation:\n",rali_dataset)
+  
+  rali_dataset = rali_dataset.apply(tf.contrib.data.batch_and_drop_remainder(batch_size))
+  # print("\nDATASET after batching:\n",rali_dataset)
+  
+  rali_dataset = rali_dataset.prefetch(input_reader_config.num_prefetch_batches)
+  # print("\nDATASET after prefetching:\n",rali_dataset)
+  # '''
+
+  return rali_dataset
+
+
 
 def build(input_reader_config, batch_size=None, transform_input_data_fn=None, multi_gpu=True):
   """Builds a tf.data.Dataset.

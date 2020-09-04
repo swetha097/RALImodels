@@ -36,6 +36,7 @@ from amd.rali.plugin.tf import RALIIterator
 from amd.rali.pipeline import Pipeline
 import amd.rali.ops as ops
 import amd.rali.types as types
+import rali
 
 from absl import flags
 
@@ -213,10 +214,10 @@ class HybridValPipe(Pipeline):
 
 def main(unused_argv):
 	
-	# trainImagePath = "/media/ssdTraining/coco_2tfrEachOriginal/train/"
-	trainImagePath = "/media/ssdTraining/dataOriginal/coco2017_tfrecords/train/"
-	# valImagePath = "/media/ssdTraining/coco_2tfrEachOriginal/val/"
-	valImagePath = "/media/ssdTraining/dataOriginal/coco2017_tfrecords/val/"
+	trainImagePath = "/media/ssdTraining/coco_2tfrEachOriginal/train/"
+	# trainImagePath = "/media/ssdTraining/dataOriginal/coco2017_tfrecords/train/"
+	valImagePath = "/media/ssdTraining/coco_2tfrEachOriginal/val/"
+	# valImagePath = "/media/ssdTraining/dataOriginal/coco2017_tfrecords/val/"
 	bs = 128
 	nt = 1
 	di = 0
@@ -238,12 +239,16 @@ def main(unused_argv):
 	train_pipe = HybridTrainPipe(feature_key_map=featureKeyMap, tfrecordreader_type=TFRecordReaderType, batch_size=bs, num_threads=nt, device_id=di, data_dir=trainImagePath, crop=cropSize, rali_cpu=raliCPU) 
 	train_pipe.build()	
 	train_imageIterator =  RALIIterator(train_pipe)
-	train_enum = enumerate(train_imageIterator, 0)
+	# train_enum = enumerate(train_imageIterator, 0)
+	# rali.initialize_train_enumerator(train_imageIterator)
+	rali.initialize_enumerator(train_imageIterator, 0)
 
 	val_pipe = HybridValPipe(feature_key_map=featureKeyMap, tfrecordreader_type=TFRecordReaderType, batch_size=bs, num_threads=nt, device_id=di, data_dir=valImagePath, crop=cropSize, rali_cpu=raliCPU)
 	val_pipe.build()
 	val_imageIterator = RALIIterator(val_pipe)
-	val_enum = enumerate(val_imageIterator, 0)
+	# val_enum = enumerate(val_imageIterator, 0)
+	# rali.initialize_val_enumerator(val_imageIterator)
+	rali.initialize_enumerator(val_imageIterator, 1)
 
 	tf.logging.set_verbosity(tf.logging.INFO)
 	if FLAGS.amp:
@@ -264,8 +269,8 @@ def main(unused_argv):
 	config = tf.estimator.RunConfig(model_dir=model_dir, session_config=session_config)
 
 	train_and_eval_dict = model_lib.create_estimator_and_inputs(
-		rali_train_iterator=train_enum,
-		rali_val_iterator=val_enum,
+		rali_train_iterator=train_imageIterator,
+		rali_val_iterator=val_imageIterator,
 		rali_batch_size = bs,
 		run_config=config,
 		eval_count=FLAGS.eval_count,
@@ -310,9 +315,9 @@ def main(unused_argv):
 				eval_on_train_data=False)
 
 		logging_hook = tf.train.LoggingTensorHook({
-			"true_global_step": "global_step"
+			"global_step": "global_step"
 			# "source_ID" : "sourcceID"
-		}, every_n_iter=100)
+		}, every_n_iter=1)
 		train_hooks = [hvd.BroadcastGlobalVariablesHook(0), DLLoggerHook(hvd.size()*train_and_eval_dict['train_batch_size'], hvd.rank()), logging_hook]
 		# train_hooks.append(train_input_hook)
 		eval_hooks = []
@@ -341,17 +346,17 @@ def main(unused_argv):
 							hooks=train_hooks,
 							steps=train_steps)
 			
-			global_step = estimator.get_variable_value("global_step")
+			global_step_outside = estimator.get_variable_value("global_step")
 			
-			print ("\n\nCURRENT GLOBAL STEP :", global_step)
+			print ("\n\nCURRENT GLOBAL STEP :", global_step_outside)
 			print ("Current iteration in loop :", x)
 			
 			print ("Removing events.out.tfevents...")
 			try:
 				os.system("rm -rvf /media/ssdTraining/checkpoints/events.out.tfevents*")
-				print ("Successfully removed events.out.tfevents!")
+				print ("Successfully removed events.out.tfevents!\n\n")
 			except:
-				print ("Unable to remove events.out.tfevents!")
+				print ("Unable to remove events.out.tfevents!\n\n")
 			
 		if hvd.rank() == 0:
 			eval_input_fn = eval_input_fns[0]
@@ -366,17 +371,17 @@ def main(unused_argv):
 							hooks=train_hooks,
 							steps=train_steps)
 			
-			global_step = estimator.get_variable_value("global_step")
+			global_step_outside = estimator.get_variable_value("global_step")
 			
-			print ("\n\nCURRENT GLOBAL STEP :", global_step)
+			print ("\n\nCURRENT GLOBAL STEP :", global_step_outside)
 			print ("Current iteration in loop :", x)
 			
 			print ("Removing events.out.tfevents...")
 			try:
 				os.system("rm -rvf /media/ssdTraining/checkpoints/events.out.tfevents*")
-				print ("Successfully removed events.out.tfevents!")
+				print ("Successfully removed events.out.tfevents!\n\n")
 			except:
-				print ("Unable to remove events.out.tfevents!")
+				print ("Unable to remove events.out.tfevents!\n\n")
 
 		if hvd.rank() == 0:
 			eval_input_fn = eval_input_fns[0]

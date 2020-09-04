@@ -57,7 +57,8 @@ SERVING_FED_EXAMPLE_KEY = 'serialized_example'
 # A map of names to methods that help build the input pipeline.
 INPUT_BUILDER_UTIL_MAP = {
     'dataset_build': dataset_builder.build,
-    'rali_dataset_build': dataset_builder.rali_build,
+    'rali_train_dataset_build': dataset_builder.rali_train_build,
+    'rali_val_dataset_build': dataset_builder.rali_val_build
 }
 
 class IteratorInitializerHook(tf.train.SessionRunHook):
@@ -538,7 +539,7 @@ def create_train_input_fn(rali_train_iterator, rali_batch_size, train_config, tr
     # '''
     # RALI_DATASET VERSION:
     # rali_dataset = INPUT_BUILDER_UTIL_MAP['rali_dataset_build'](enum=rali_train_iterator, input_reader_config=train_input_config, iterator_initializer_hook=iterator_initializer_hook, rali_batch_size=rali_batch_size, batch_size=params['batch_size'] if params else train_config.batch_size)
-    rali_dataset = INPUT_BUILDER_UTIL_MAP['rali_dataset_build'](enum=rali_train_iterator, input_reader_config=train_input_config, rali_batch_size=rali_batch_size, batch_size=params['batch_size'] if params else train_config.batch_size)
+    rali_dataset = INPUT_BUILDER_UTIL_MAP['rali_train_dataset_build'](iterator=rali_train_iterator, input_reader_config=train_input_config, rali_batch_size=rali_batch_size, batch_size=params['batch_size'] if params else train_config.batch_size)
     # '''
     
     '''
@@ -674,7 +675,7 @@ def create_eval_input_fn(rali_val_iterator, rali_batch_size, eval_config, eval_i
 
     # '''
     # RALI_DATASET VERSION:
-    rali_dataset = INPUT_BUILDER_UTIL_MAP['rali_dataset_build'](enum=rali_val_iterator, input_reader_config=eval_input_config, rali_batch_size=rali_batch_size, batch_size=params['batch_size'] if params else eval_config.batch_size)
+    rali_dataset = INPUT_BUILDER_UTIL_MAP['rali_val_dataset_build'](iterator=rali_val_iterator, input_reader_config=eval_input_config, rali_batch_size=rali_batch_size, batch_size=params['batch_size'] if params else eval_config.batch_size)
     # '''
     
     '''
