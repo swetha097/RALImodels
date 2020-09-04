@@ -41,13 +41,10 @@ import rali
 from absl import flags
 
 import tensorflow as tf
-# import numpy as np
 import horovod.tensorflow as hvd
 import dllogger
 import time
 import os
-# tf.enable_eager_execution()
-# import tensorflow.contrib.eager as tfe
 
 from object_detection import model_hparams
 from object_detection import model_lib
@@ -182,15 +179,14 @@ class HybridValPipe(Pipeline):
 		decoder_device = 'cpu' if rali_cpu else 'mixed'
 		device_memory_padding = 211025920 if decoder_device == 'mixed' else 0
 		host_memory_padding = 140544512 if decoder_device == 'mixed' else 0
-		self.decode = ops.ImageDecoder(user_feature_key_map=feature_key_map,
-		device=decoder_device, output_type=types.RGB)
+		self.decode = ops.ImageDecoder(user_feature_key_map=feature_key_map, device=decoder_device, output_type=types.RGB)
 		# self.decode = ops.ImageDecoderRandomCrop(user_feature_key_map=feature_key_map,
-		#                                                                                 device=decoder_device, output_type=types.RGB,
-		#                                                                                 device_memory_padding=device_memory_padding,
-		#                                                                                 host_memory_padding=host_memory_padding,
-		#                                                                                 random_aspect_ratio=[0.8, 1.25],
-		#                                                                                 random_area=[0.1, 1.0],
-		#                                                                                 num_attempts=100)
+		# 											device=decoder_device, output_type=types.RGB,
+		# 											device_memory_padding=device_memory_padding,
+		# 											host_memory_padding=host_memory_padding,
+		# 											random_aspect_ratio=[0.8, 1.25],
+		# 											random_area=[0.1, 1.0],
+		# 											num_attempts=100)
 		self.res = ops.Resize(device=rali_device, resize_x=crop, resize_y=crop)
 		self.cmnp = ops.CropMirrorNormalize(device="cpu",
 											output_dtype=types.FLOAT,
@@ -214,10 +210,8 @@ class HybridValPipe(Pipeline):
 
 def main(unused_argv):
 	
-	trainImagePath = "/media/ssdTraining/coco_2tfrEachOriginal/train/"
-	# trainImagePath = "/media/ssdTraining/dataOriginal/coco2017_tfrecords/train/"
-	valImagePath = "/media/ssdTraining/coco_2tfrEachOriginal/val/"
-	# valImagePath = "/media/ssdTraining/dataOriginal/coco2017_tfrecords/val/"
+	trainImagePath = "/media/ssdTraining/dataOriginal/coco2017_tfrecords/train/"
+	valImagePath = "/media/ssdTraining/dataOriginal/coco2017_tfrecords/val/"
 	bs = 128
 	nt = 1
 	di = 0
@@ -239,15 +233,11 @@ def main(unused_argv):
 	train_pipe = HybridTrainPipe(feature_key_map=featureKeyMap, tfrecordreader_type=TFRecordReaderType, batch_size=bs, num_threads=nt, device_id=di, data_dir=trainImagePath, crop=cropSize, rali_cpu=raliCPU) 
 	train_pipe.build()	
 	train_imageIterator =  RALIIterator(train_pipe)
-	# train_enum = enumerate(train_imageIterator, 0)
-	# rali.initialize_train_enumerator(train_imageIterator)
 	rali.initialize_enumerator(train_imageIterator, 0)
 
 	val_pipe = HybridValPipe(feature_key_map=featureKeyMap, tfrecordreader_type=TFRecordReaderType, batch_size=bs, num_threads=nt, device_id=di, data_dir=valImagePath, crop=cropSize, rali_cpu=raliCPU)
 	val_pipe.build()
 	val_imageIterator = RALIIterator(val_pipe)
-	# val_enum = enumerate(val_imageIterator, 0)
-	# rali.initialize_val_enumerator(val_imageIterator)
 	rali.initialize_enumerator(val_imageIterator, 1)
 
 	tf.logging.set_verbosity(tf.logging.INFO)
@@ -286,8 +276,6 @@ def main(unused_argv):
 	eval_on_train_input_fn = train_and_eval_dict['eval_on_train_input_fn']
 	predict_input_fn = train_and_eval_dict['predict_input_fn']
 	train_steps = train_and_eval_dict['train_steps']
-	# train_input_hook = train_and_eval_dict['train_input_hook']
-	# val_input_hook = train_and_eval_dict['val_input_hook']
 
 	if FLAGS.checkpoint_dir:
 		if FLAGS.eval_training_data:
@@ -314,31 +302,27 @@ def main(unused_argv):
 				train_steps,
 				eval_on_train_data=False)
 
-		logging_hook = tf.train.LoggingTensorHook({
-			"global_step": "global_step"
-			# "source_ID" : "sourcceID"
-		}, every_n_iter=1)
+		logging_hook = tf.train.LoggingTensorHook({"global_step": "global_step"}, every_n_iter=100)
 		train_hooks = [hvd.BroadcastGlobalVariablesHook(0), DLLoggerHook(hvd.size()*train_and_eval_dict['train_batch_size'], hvd.rank()), logging_hook]
-		# train_hooks.append(train_input_hook)
 		eval_hooks = []
 
-		# for x in range(FLAGS.eval_count):
-		# 	estimator.train(train_input_fn,
-		# 					hooks=train_hooks,
-		# 					steps=train_steps // FLAGS.eval_count)
+		for x in range(FLAGS.eval_count):
+			estimator.train(train_input_fn,
+							hooks=train_hooks,
+							steps=train_steps // FLAGS.eval_count)
 			
-		# 	global_step = estimator.get_variable_value("global_step")
-		# 	print ("\n\nCURRENT GLOBAL STEP :", global_step)
+			# global_step = estimator.get_variable_value("global_step")
+			# print ("\n\nCURRENT GLOBAL STEP :", global_step)
 			
-		# 	if hvd.rank() == 0:
-		# 		eval_input_fn = eval_input_fns[0]
-		# 		results = estimator.evaluate(eval_input_fn,
-		# 									steps=None,
-		# 									hooks=eval_hooks)
+			if hvd.rank() == 0:
+				eval_input_fn = eval_input_fns[0]
+				results = estimator.evaluate(eval_input_fn,
+											steps=None,
+											hooks=eval_hooks)
 
 		
 		# Separate train and  eval
-		# '''
+		'''
 		
 		# Running 50 in loop
 		for x in range(50):
@@ -388,7 +372,7 @@ def main(unused_argv):
 			results = estimator.evaluate(eval_input_fn,
 										steps=None,
 										hooks=eval_hooks)
-		# '''
+		'''
 
 if __name__ == '__main__':
 	tf.app.run()

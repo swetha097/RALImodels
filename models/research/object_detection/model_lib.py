@@ -678,7 +678,6 @@ def create_estimator_and_inputs(rali_train_iterator,
       predict_input_fn=predict_input_fn,
       train_steps=train_steps,
       train_batch_size=train_config.batch_size)
-      # train_input_hook=train_input_hook)
 
 
 def create_train_and_eval_specs(train_input_fn,

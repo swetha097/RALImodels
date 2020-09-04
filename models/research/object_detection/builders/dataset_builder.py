@@ -40,13 +40,8 @@ import tensorflow as tf
 import horovod.tensorflow as hvd
 import numpy as np
 import multiprocessing as mp
-# HASH_KEY = 'hash'
-# HASH_BINS = 1 << 31
-
-# tf.enable_eager_execution()
 from object_detection.data_decoders import tf_example_decoder
 from object_detection.protos import input_reader_pb2
-
 import object_detection.rali as rali
 
 def make_initializable_iterator(dataset):
@@ -213,36 +208,15 @@ def rali_processed_train_tensors_generator(rali_batch_size, num_classes, iterato
     flag = not(count % int(1536 / rali_batch_size) == 0)
 
   pool.close()
+
+  return [np.array(images_tensor, dtype=np.float32),
+  np.array(hash_key_tensor),
+  np.array(true_image_shapes_tensor, dtype=np.int32),
+  np.array(num_groundtruth_boxes_tensor, dtype=np.int32),
+  np.array(groundtruth_boxes_tensor, dtype=np.float32),
+  np.array(groundtruth_classes_tensor, dtype=np.float32),
+  np.array(groundtruth_weights_tensor, dtype=np.float32)]
   
-  # FOR THE "CALLING rali_processed_tensors_generator() VERSION"
-
-  features_dict = {
-    "image" : np.array(images_tensor, dtype=np.float32),
-    "hash" : np.array(hash_key_tensor),
-    "true_image_shape" : np.array(true_image_shapes_tensor, dtype=np.int32)
-  }
-  labels_dict = {
-    "num_groundtruth_boxes" : np.array(num_groundtruth_boxes_tensor, dtype=np.int32),
-    "groundtruth_boxes" : np.array(groundtruth_boxes_tensor, dtype=np.float32),
-    "groundtruth_classes" : np.array(groundtruth_classes_tensor, dtype=np.float32),
-    "groundtruth_weights" : np.array(groundtruth_weights_tensor, dtype=np.float32)
-  }
-
-  processed_tensors = (features_dict, labels_dict)
-
-  # FOR THE "WITH INITIALIZABLE ITERATOR VERSION"
-
-  # processed_tensors = (
-  #   np.array(images_tensor, dtype=np.float32),
-  #   np.array(hash_key_tensor),
-  #   np.array(true_image_shapes_tensor, dtype=np.int32),
-  #   np.array(num_groundtruth_boxes_tensor, dtype=np.int32),
-  #   np.array(groundtruth_boxes_tensor, dtype=np.float32),
-  #   np.array(groundtruth_classes_tensor, dtype=np.float32),
-  #   np.array(groundtruth_weights_tensor, dtype=np.float32)
-  # )
-  
-  return processed_tensors
 
 def rali_processed_val_tensors_generator(rali_batch_size, num_classes, iterator):
   
@@ -292,309 +266,200 @@ def rali_processed_val_tensors_generator(rali_batch_size, num_classes, iterator)
 
   pool.close()
   
-  features_dict = {
-    "image" : np.array(images_tensor, dtype=np.float32),
-    "hash" : np.array(hash_key_tensor),
-    "true_image_shape" : np.array(true_image_shapes_tensor, dtype=np.int32)
-  }
-  labels_dict = {
-    "num_groundtruth_boxes" : np.array(num_groundtruth_boxes_tensor, dtype=np.int32),
-    "groundtruth_boxes" : np.array(groundtruth_boxes_tensor, dtype=np.float32),
-    "groundtruth_classes" : np.array(groundtruth_classes_tensor, dtype=np.float32),
-    "groundtruth_weights" : np.array(groundtruth_weights_tensor, dtype=np.float32)
-  }
+  return [np.array(images_tensor, dtype=np.float32),
+  np.array(hash_key_tensor),
+  np.array(true_image_shapes_tensor, dtype=np.int32),
+  np.array(num_groundtruth_boxes_tensor, dtype=np.int32),
+  np.array(groundtruth_boxes_tensor, dtype=np.float32),
+  np.array(groundtruth_classes_tensor, dtype=np.float32),
+  np.array(groundtruth_weights_tensor, dtype=np.float32)]
 
-  processed_tensors = (features_dict, labels_dict)
-  
-  return processed_tensors
-
-
-
-
-
-
-# def rali_build(enum, input_reader_config, iterator_initializer_hook, rali_batch_size=32, batch_size = 4):
 def rali_train_build(iterator, input_reader_config, rali_batch_size=32, batch_size = 4):
-  # global_step_inside = tf.train.get_or_create_global_step()
-  # print ("\n\n\n\nGLOBAL STEP =", global_step)
-  # tf.print ("\n\n\n\nGLOBAL STEP =", global_step)
+  
   num_classes = 90
-  # enum = enumerate(iterator, 0)
-  
-  
 
-
-
-
-  # SERIAL CODE
-  '''
-  images_tensor = np.empty([0, 320, 320, 3], dtype = np.float32)
-  true_image_shapes_tensor = np.empty([0, 3], dtype = np.int32)
-  num_groundtruth_boxes_tensor = np.empty([0], dtype = np.int32)
-  groundtruth_boxes_tensor = np.empty([0, 100, 4], dtype = np.float32)
-  groundtruth_classes_tensor = np.empty([0, 100, numClasses], dtype = np.float32)
-  groundtruth_weights_tensor = np.empty([0, 100], dtype = np.float32)
-  # hash_key_tensor = np.empty([0], dtype = np.int32)
-  hash_key_tensor = []
-
-  print("\n######################################################################################################\n")
-  print("\nStarting RALI augmentation pipeline...")
-  sourceID = 1000000
-  for i, (images_array, bboxes_array, labels_array, num_bboxes_array) in enumerate(iterator, 0):
-    images_array = np.transpose(images_array, [0, 2, 3, 1])
-    # bboxes_array = normalize_bbox_values(bboxes_array, batch_size)
-    print("RALI augmentation pipeline - Processing batch %d....." % i)
-    for element in list(range(rali_batch_size)):
-      # print("Processing image %d....." % element)
-      # hash_key = generate_hash_key().eval(session=tf.Session())
-      # print("hash_key::",hash_key)
-      # hash_key_tensor = np.append(hash_key_tensor,hash_key,axis = 0)
-      hash_key_tensor.append(str(sourceID))
-      images_tensor = np.append(images_tensor, np.array([images_array[element]], dtype = np.float32), axis = 0)
-      num_groundtruth_boxes_tensor = np.append(num_groundtruth_boxes_tensor, np.array([num_bboxes_array[element]], dtype = np.int32), axis = 0)
-      true_image_shapes_tensor = np.append(true_image_shapes_tensor, np.array([get_shapes(images_array[element])], dtype = np.int32), axis = 0)
-      groundtruth_boxes_tensor = np.append(groundtruth_boxes_tensor, np.array([get_normalized(bboxes_array[element], len(images_array[element]), len(images_array[element,0]))], dtype = np.float32), axis = 0)
-      groundtruth_classes_tensor = np.append(groundtruth_classes_tensor, np.array([get_onehot(labels_array[element], numClasses)], dtype = np.float32), axis = 0)
-      groundtruth_weights_tensor = np.append(groundtruth_weights_tensor, np.array([get_weights(num_bboxes_array[element])], dtype = np.float32), axis = 0)
-      sourceID += 1
-
-    # if i >= 1:
-    #   break
-  '''
-
-
-
-
-
-
-  # PARALLEL CODE
-  '''
-  result = []
-  hash_key_tensor = []
-  images_tensor = []
-  num_groundtruth_boxes_tensor = []
-  true_image_shapes_tensor = []
-  groundtruth_boxes_tensor = []
-  groundtruth_classes_tensor = []
-  groundtruth_weights_tensor = []
-  
-  pool = mp.Pool(mp.cpu_count())
-  sourceID = 1000000
-
-  print("\n######################################################################################################\n")
-  print("\nStarting RALI augmentation pipeline...")
-
-  for i, (images_array, bboxes_array, labels_array, num_bboxes_array) in enumerate(iterator, 0):
+  def rali_train_generator():
     
-    print("RALI augmentation pipeline - Processing batch %d....." % i)
-
-    images_array = np.transpose(images_array, [0, 2, 3, 1])
-
-    result = pool.map(rali_parallelized_tensor_generator, np.array([
-      [images_array[element], bboxes_array[element], labels_array[element], num_bboxes_array[element], sourceID + element, num_classes] for element in list(range(rali_batch_size))
-      ]))
-
-    for image_data in result:
-      hash_key_tensor.append(image_data[0])
-      images_tensor.append(image_data[1])
-      num_groundtruth_boxes_tensor.append(image_data[2])
-      true_image_shapes_tensor.append(image_data[3])
-      groundtruth_boxes_tensor.append(image_data[4])
-      groundtruth_classes_tensor.append(image_data[5])
-      groundtruth_weights_tensor.append(image_data[6])
+    i = 0
     
-    sourceID += rali_batch_size
+    images_tensor = np.array([])
+    hash_key_tensor = np.array([])
+    true_image_shapes_tensor = np.array([])
+    num_groundtruth_boxes_tensor = np.array([])
+    groundtruth_boxes_tensor = np.array([])
+    groundtruth_classes_tensor = np.array([])
+    groundtruth_weights_tensor = np.array([])
+
+    while True:
+
+      testElement = hash_key_tensor[(i * batch_size) : ((i * batch_size) + batch_size)]
+      
+      if testElement.size == 0:
+        print("\nFetching next augmented tensor batch from RALI...")
+        i = 0
+        
+        result = rali_processed_train_tensors_generator(
+          rali_batch_size = rali_batch_size, 
+          num_classes = num_classes, 
+          iterator = iterator
+        )
+
+        images_tensor = result[0]
+        hash_key_tensor = result[1]
+        true_image_shapes_tensor = result[2]
+        num_groundtruth_boxes_tensor = result[3]
+        groundtruth_boxes_tensor = result[4]
+        groundtruth_classes_tensor = result[5]
+        groundtruth_weights_tensor = result[6]
+
+      print("RALI augmented batch loading...")
+      start = i * batch_size
+      stop = start + batch_size
+
+      features_dict = {
+        "image" : images_tensor[start:stop],
+        "hash" : hash_key_tensor[start:stop],
+        "true_image_shape" : true_image_shapes_tensor[start:stop],
+      }
+      labels_dict = {
+        "num_groundtruth_boxes" : num_groundtruth_boxes_tensor[start:stop],
+        "groundtruth_boxes" : groundtruth_boxes_tensor[start:stop],
+        "groundtruth_classes" : groundtruth_classes_tensor[start:stop],
+        "groundtruth_weights" : groundtruth_weights_tensor[start:stop]
+      }
+
+      processed_tensors_tuple = (features_dict, labels_dict)
+      
+      yield processed_tensors_tuple
+
+      i += 1
   
-  pool.close()
-
-  features_dict = {
-    "image" : np.array(images_tensor, dtype=np.float32),
-    "hash" : np.array(hash_key_tensor),
-    "true_image_shape" : np.array(true_image_shapes_tensor, dtype=np.int32)
-  }
-  labels_dict = {
-    "num_groundtruth_boxes" : np.array(num_groundtruth_boxes_tensor, dtype=np.int32),
-    "groundtruth_boxes" : np.array(groundtruth_boxes_tensor, dtype=np.float32),
-    "groundtruth_classes" : np.array(groundtruth_classes_tensor, dtype=np.float32),
-    "groundtruth_weights" : np.array(groundtruth_weights_tensor, dtype=np.float32)
-  }
-  
-  processed_tensors = (features_dict, labels_dict)
-  # print("\nPROCESSED_TENSORS:\n",processed_tensors)
-  print("\nFinished RALI augmentation pipeline!\n")
-  print("\n######################################################################################################\n")
-
-  rali_dataset = tf.data.Dataset.from_tensor_slices(processed_tensors)
-  # rali_dataset = tf.data.Dataset.from_tensor_slices(rali_process_tensors(batch_size, num_classes, iterator))
-  # print("\nDATASET after creation:\n",rali_dataset)
-  
-  rali_dataset = rali_dataset.apply(tf.contrib.data.batch_and_drop_remainder(batch_size))
-  # print("\nDATASET after batching:\n",rali_dataset)
-  
-  rali_dataset = rali_dataset.prefetch(input_reader_config.num_prefetch_batches)
-  # print("\nDATASET after prefetching:\n",rali_dataset)
-  '''
-
-
-
-
-
-
-  # CALLING rali_processed_tensors_generator() VERSION
-  # '''
-  rali_dataset = tf.data.Dataset.from_tensor_slices(rali_processed_train_tensors_generator(rali_batch_size = rali_batch_size, num_classes = num_classes, iterator = iterator))
-  # print("\nDATASET after creation:\n",rali_dataset)
-  
-  rali_dataset = rali_dataset.apply(tf.contrib.data.batch_and_drop_remainder(batch_size))
-  # print("\nDATASET after batching:\n",rali_dataset)
-  
-  rali_dataset = rali_dataset.prefetch(input_reader_config.num_prefetch_batches)
-  # print("\nDATASET after prefetching:\n",rali_dataset)
-  # '''
-
-
-
-
-
-
-
-  # TRIAL VERSION FOR GENERATOR
-  '''
-
-  def rali_generator_function(start_index):
-    
-    end_index = start_index + (10 * rali_batch_size)
-    print("\n\nstart_index, end_index =" + str(start_index) + "," + str(end_index))
-
-    hash_key_tensor_slice = hash_key_tensor[start_index:end_index]
-    images_tensor_slice = images_tensor[start_index:end_index]
-    num_groundtruth_boxes_tensor_slice = num_groundtruth_boxes_tensor[start_index:end_index]
-    true_image_shapes_tensor_slice = true_image_shapes_tensor[start_index:end_index]
-    groundtruth_boxes_tensor_slice = groundtruth_boxes_tensor[start_index:end_index]
-    groundtruth_classes_tensor_slice = groundtruth_classes_tensor[start_index:end_index]
-    groundtruth_weights_tensor_slice = groundtruth_weights_tensor[start_index:end_index]
-  
-    features_dict = {
-      "image" : np.array(images_tensor_slice, dtype=np.float32),
-      "hash" : np.array(hash_key_tensor_slice),
-      "true_image_shape" : np.array(true_image_shapes_tensor_slice, dtype=np.int32)
-    }
-    labels_dict = {
-      "num_groundtruth_boxes" : np.array(num_groundtruth_boxes_tensor_slice, dtype=np.int32),
-      "groundtruth_boxes" : np.array(groundtruth_boxes_tensor_slice, dtype=np.float32),
-      "groundtruth_classes" : np.array(groundtruth_classes_tensor_slice, dtype=np.float32),
-      "groundtruth_weights" : np.array(groundtruth_weights_tensor_slice, dtype=np.float32)
-    }
-
-    start_index = end_index + 1
-  
-    yield [start_index, (features_dict, labels_dict)]
-
-  start_index = 0
-  # processed_tensors = (features_dict, labels_dict)
-  processed_tensors_function = rali_generator_function(start_index = start_index)
-  # print("\nPROCESSED_TENSORS:\n",processed_tensors)
-  print("\nFinished RALI augmentation pipeline!\n")
-  print("\n######################################################################################################\n")
-
-  output_of_generator = next(processed_tensors_function)
-  start_index = output_of_generator[0]
-  sliced_dataset_tuple = output_of_generator[1]
-  rali_dataset = tf.data.Dataset.from_tensor_slices(sliced_dataset_tuple)
-  # rali_dataset = tf.data.Dataset.from_tensor_slices(rali_process_tensors(batch_size, num_classes, iterator))
-  # print("\nDATASET after creation:\n",rali_dataset)
-  
-  rali_dataset = rali_dataset.apply(tf.contrib.data.batch_and_drop_remainder(batch_size))
-  # print("\nDATASET after batching:\n",rali_dataset)
-  
-  rali_dataset = rali_dataset.prefetch(input_reader_config.num_prefetch_batches)
-  # print("\nDATASET after prefetching:\n",rali_dataset)
-  '''
-
-
-
-
-
-
-
-  # WITH INITIALIZABLE ITERATOR
-  '''
-  with tf.name_scope('training_data'):
-    processed_tensors = rali_processed_tensors_generator(rali_batch_size, num_classes, enum)
-    
-    # features_placeholder = tf.placeholder(processed_tensors[0].dtype, processed_tensors[0].shape)
-    # labels_placeholder = tf.placeholder(processed_tensors[1].dtype, processed_tensors[1].shape)
-
-    images_placeholder = tf.placeholder(processed_tensors[0].dtype, processed_tensors[0].shape)
-    hash_key_placeholder = tf.placeholder(processed_tensors[1].dtype, processed_tensors[1].shape)
-    true_image_shapes_placeholder = tf.placeholder(processed_tensors[2].dtype, processed_tensors[2].shape)
-    num_groundtruth_boxes_placeholder = tf.placeholder(processed_tensors[3].dtype, processed_tensors[3].shape)
-    groundtruth_boxes_placeholder = tf.placeholder(processed_tensors[4].dtype, processed_tensors[4].shape)
-    groundtruth_classes_placeholder = tf.placeholder(processed_tensors[5].dtype, processed_tensors[5].shape)
-    groundtruth_weights_placeholder = tf.placeholder(processed_tensors[6].dtype, processed_tensors[6].shape)
-    
-    rali_dataset = tf.data.Dataset.from_tensor_slices(
-      (
-        {
-          "image" : images_placeholder,
-          "hash" : hash_key_placeholder,
-          "true_image_shape" : true_image_shapes_placeholder
-        },
-        {
-          "num_groundtruth_boxes" : num_groundtruth_boxes_placeholder,
-          "groundtruth_boxes" : groundtruth_boxes_placeholder,
-          "groundtruth_classes" : groundtruth_classes_placeholder,
-          "groundtruth_weights" : groundtruth_weights_placeholder
-        }
-      )
-    )
-    # rali_dataset = rali_dataset.apply(tf.contrib.data.batch_and_drop_remainder(batch_size))
-    # rali_dataset = rali_dataset.prefetch(input_reader_config.num_prefetch_batches)
-    # rali_dataset = rali_dataset.repeat()
-    rali_dataset = rali_dataset.batch(batch_size)
-    # rali_dataset = rali_dataset.repeat()
-    iterator = rali_dataset.make_initializable_iterator()
-    next_feature_set, next_label_set = iterator.get_next()
-
-    iterator_initializer_hook.iterator_initializer_func = lambda sess: sess.run(
-      iterator.initializer,
-      feed_dict={
-        images_placeholder : processed_tensors[0], 
-        hash_key_placeholder : processed_tensors[1], 
-        true_image_shapes_placeholder : processed_tensors[2], 
-        num_groundtruth_boxes_placeholder : processed_tensors[3], 
-        groundtruth_boxes_placeholder : processed_tensors[4], 
-        groundtruth_classes_placeholder : processed_tensors[5], 
-        groundtruth_weights_placeholder : processed_tensors[6]
+  rali_dataset = tf.data.Dataset.from_generator(rali_train_generator,
+    output_types = (
+      {
+        "image" : tf.float32,
+        "hash" : tf.string,
+        "true_image_shape" : tf.int32
+      },
+      {
+        "num_groundtruth_boxes" : tf.int32,
+        "groundtruth_boxes" : tf.float32,
+        "groundtruth_classes" : tf.float32,
+        "groundtruth_weights" : tf.float32
+      }
+    ), 
+    output_shapes = (
+      {
+        "image" : (batch_size, 320, 320, 3),
+        "hash" : (batch_size, ),
+        "true_image_shape" : (batch_size, 3)
+      },
+      {
+        "num_groundtruth_boxes" : (batch_size, ),
+        "groundtruth_boxes" : (batch_size, 100, 4),
+        "groundtruth_classes" : (batch_size, 100, 90),
+        "groundtruth_weights" : (batch_size, 100)
       }
     )
-    
-    return next_feature_set, next_label_set
-  '''
+  )
 
-  return rali_dataset
-  # return tf.compat.v1.data.make_one_shot_iterator(rali_dataset)
+  rali_one_shot_iterator = rali_dataset.make_one_shot_iterator()
+
+  return rali_one_shot_iterator.get_next()
 
 
 def rali_val_build(iterator, input_reader_config, rali_batch_size=32, batch_size = 4):
   
   num_classes = 90
-  
-  # CALLING rali_processed_tensors_generator() VERSION
-  # '''
-  rali_dataset = tf.data.Dataset.from_tensor_slices(rali_processed_val_tensors_generator(rali_batch_size = rali_batch_size, num_classes = num_classes, iterator = iterator))
-  # print("\nDATASET after creation:\n",rali_dataset)
-  
-  rali_dataset = rali_dataset.apply(tf.contrib.data.batch_and_drop_remainder(batch_size))
-  # print("\nDATASET after batching:\n",rali_dataset)
-  
-  rali_dataset = rali_dataset.prefetch(input_reader_config.num_prefetch_batches)
-  # print("\nDATASET after prefetching:\n",rali_dataset)
-  # '''
 
-  return rali_dataset
+  def rali_val_generator():
+    
+    i = 0
+    
+    images_tensor = np.array([])
+    hash_key_tensor = np.array([])
+    true_image_shapes_tensor = np.array([])
+    num_groundtruth_boxes_tensor = np.array([])
+    groundtruth_boxes_tensor = np.array([])
+    groundtruth_classes_tensor = np.array([])
+    groundtruth_weights_tensor = np.array([])
 
+    while True:
 
+      testElement = hash_key_tensor[(i * batch_size) : ((i * batch_size) + batch_size)]
+      
+      if testElement.size == 0:
+        print("\nFetching next augmented tensor batch from RALI...")
+        i = 0
+        
+        result = rali_processed_val_tensors_generator(
+          rali_batch_size = rali_batch_size, 
+          num_classes = num_classes, 
+          iterator = iterator
+        )
+
+        images_tensor = result[0]
+        hash_key_tensor = result[1]
+        true_image_shapes_tensor = result[2]
+        num_groundtruth_boxes_tensor = result[3]
+        groundtruth_boxes_tensor = result[4]
+        groundtruth_classes_tensor = result[5]
+        groundtruth_weights_tensor = result[6]
+
+      print("RALI augmented batch loading...")
+      start = i * batch_size
+      stop = start + batch_size
+
+      features_dict = {
+        "image" : images_tensor[start:stop],
+        "hash" : hash_key_tensor[start:stop],
+        "true_image_shape" : true_image_shapes_tensor[start:stop],
+      }
+      labels_dict = {
+        "num_groundtruth_boxes" : num_groundtruth_boxes_tensor[start:stop],
+        "groundtruth_boxes" : groundtruth_boxes_tensor[start:stop],
+        "groundtruth_classes" : groundtruth_classes_tensor[start:stop],
+        "groundtruth_weights" : groundtruth_weights_tensor[start:stop]
+      }
+
+      processed_tensors_tuple = (features_dict, labels_dict)
+      
+      yield processed_tensors_tuple
+
+      i += 1
+  
+  rali_dataset = tf.data.Dataset.from_generator(rali_val_generator,
+    output_types = (
+      {
+        "image" : tf.float32,
+        "hash" : tf.string,
+        "true_image_shape" : tf.int32
+      },
+      {
+        "num_groundtruth_boxes" : tf.int32,
+        "groundtruth_boxes" : tf.float32,
+        "groundtruth_classes" : tf.float32,
+        "groundtruth_weights" : tf.float32
+      }
+    ), 
+    output_shapes = (
+      {
+        "image" : (batch_size, 320, 320, 3),
+        "hash" : (batch_size, ),
+        "true_image_shape" : (batch_size, 3)
+      },
+      {
+        "num_groundtruth_boxes" : (batch_size, ),
+        "groundtruth_boxes" : (batch_size, 100, 4),
+        "groundtruth_classes" : (batch_size, 100, 90),
+        "groundtruth_weights" : (batch_size, 100)
+      }
+    )
+  )
+
+  rali_one_shot_iterator = rali_dataset.make_one_shot_iterator()
+
+  return rali_one_shot_iterator.get_next()
 
 def build(input_reader_config, batch_size=None, transform_input_data_fn=None, multi_gpu=True):
   """Builds a tf.data.Dataset.
