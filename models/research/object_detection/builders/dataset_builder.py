@@ -295,7 +295,7 @@ def rali_train_build(iterator, input_reader_config, rali_batch_size=32, batch_si
       testElement = hash_key_tensor[(i * batch_size) : ((i * batch_size) + batch_size)]
       
       if testElement.size == 0:
-        print("\nFetching next augmented tensor batch from RALI...")
+        print("\nFetching next augmented train-tensor batch from RALI...")
         i = 0
         
         result = rali_processed_train_tensors_generator(
@@ -312,7 +312,6 @@ def rali_train_build(iterator, input_reader_config, rali_batch_size=32, batch_si
         groundtruth_classes_tensor = result[5]
         groundtruth_weights_tensor = result[6]
 
-      print("RALI augmented batch loading...")
       start = i * batch_size
       stop = start + batch_size
 
@@ -389,7 +388,7 @@ def rali_val_build(iterator, input_reader_config, rali_batch_size=32, batch_size
       testElement = hash_key_tensor[(i * batch_size) : ((i * batch_size) + batch_size)]
       
       if testElement.size == 0:
-        print("\nFetching next augmented tensor batch from RALI...")
+        print("\nFetching next augmented val-tensor batch from RALI...")
         i = 0
         
         result = rali_processed_val_tensors_generator(
@@ -406,7 +405,6 @@ def rali_val_build(iterator, input_reader_config, rali_batch_size=32, batch_size
         groundtruth_classes_tensor = result[5]
         groundtruth_weights_tensor = result[6]
 
-      print("RALI augmented batch loading...")
       start = i * batch_size
       stop = start + batch_size
 
@@ -503,22 +501,15 @@ def build(input_reader_config, batch_size=None, transform_input_data_fn=None, mu
     def process_fn(value):
       """Sets up tf graph that decodes, transforms and pads input data."""
       processed_tensors = decoder.decode(value)
-      print("\n\n\n\n\nprocessed_tensors::",processed_tensors)
-      print("\n\n\n\n\nprocessed_tensors::",type(processed_tensors))
       
       if transform_input_data_fn is not None:
         processed_tensors = transform_input_data_fn(processed_tensors)
-      print("\n\n\n\n\nprocessed_tensors::",processed_tensors)
-      print("\n\n\n\n\nprocessed_tensors::",type(processed_tensors))
       
       return processed_tensors
 
     dataset = read_dataset(
         functools.partial(tf.data.TFRecordDataset, buffer_size=8 * 1000 * 1000),
         config.input_path[:], input_reader_config)
-    
-    print("\n\n\n\n\n1st - DATSET::",dataset)
-    print("\n\n\n\n\n1st - TYPE OF DATASET::",type(dataset))
     
     if multi_gpu:
         dataset = dataset.shard(hvd.size(), hvd.rank())
@@ -533,18 +524,12 @@ def build(input_reader_config, batch_size=None, transform_input_data_fn=None, mu
     dataset = dataset.map(
         process_fn,
         num_parallel_calls=num_parallel_calls)
-    print("\n\n\n\n\n2nd - DATSET::",dataset)
-    print("\n\n\n\n\n2nd - TYPE OF DATASET::",type(dataset))
     
     if batch_size:
       dataset = dataset.apply(
           tf.contrib.data.batch_and_drop_remainder(batch_size))
-    print("\n\n\n\n\n3rd - DATSET::",dataset)
-    print("\n\n\n\n\n3rd - TYPE OF DATASET::",type(dataset))
     
     dataset = dataset.prefetch(input_reader_config.num_prefetch_batches)
-    print("\n\n\n\n\nDATSET::",dataset)
-    print("\n\n\n\n\nTYPE OF DATASET::",type(dataset))
     
     return dataset
 

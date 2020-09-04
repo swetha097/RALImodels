@@ -68,7 +68,7 @@ flags.DEFINE_integer('sample_1_of_n_eval_on_train_examples', 5, 'Will sample '
 										 'one of every n train input examples for evaluation, '
 										 'where n is provided. This is only used if '
 										 '`eval_training_data` is True.')
-flags.DEFINE_integer('eval_count', 1, 'How many times the evaluation should be run')
+flags.DEFINE_integer('eval_count', 2, 'How many times the evaluation should be run')
 flags.DEFINE_string(
 		'hparams_overrides', None, 'Hyperparameter overrides, '
 		'represented as a string containing comma-separated '
@@ -311,68 +311,11 @@ def main(unused_argv):
 							hooks=train_hooks,
 							steps=train_steps // FLAGS.eval_count)
 			
-			# global_step = estimator.get_variable_value("global_step")
-			# print ("\n\nCURRENT GLOBAL STEP :", global_step)
-			
 			if hvd.rank() == 0:
 				eval_input_fn = eval_input_fns[0]
 				results = estimator.evaluate(eval_input_fn,
-											steps=None,
+											steps=100,
 											hooks=eval_hooks)
-
-		
-		# Separate train and  eval
-		'''
-		
-		# Running 50 in loop
-		for x in range(50):
-			estimator.train(train_input_fn,
-							hooks=train_hooks,
-							steps=train_steps)
-			
-			global_step_outside = estimator.get_variable_value("global_step")
-			
-			print ("\n\nCURRENT GLOBAL STEP :", global_step_outside)
-			print ("Current iteration in loop :", x)
-			
-			print ("Removing events.out.tfevents...")
-			try:
-				os.system("rm -rvf /media/ssdTraining/checkpoints/events.out.tfevents*")
-				print ("Successfully removed events.out.tfevents!\n\n")
-			except:
-				print ("Unable to remove events.out.tfevents!\n\n")
-			
-		if hvd.rank() == 0:
-			eval_input_fn = eval_input_fns[0]
-			results = estimator.evaluate(eval_input_fn,
-										steps=None,
-										hooks=eval_hooks)
-
-		
-		# Running 25  more in loop
-		for x in range(25):
-			estimator.train(train_input_fn,
-							hooks=train_hooks,
-							steps=train_steps)
-			
-			global_step_outside = estimator.get_variable_value("global_step")
-			
-			print ("\n\nCURRENT GLOBAL STEP :", global_step_outside)
-			print ("Current iteration in loop :", x)
-			
-			print ("Removing events.out.tfevents...")
-			try:
-				os.system("rm -rvf /media/ssdTraining/checkpoints/events.out.tfevents*")
-				print ("Successfully removed events.out.tfevents!\n\n")
-			except:
-				print ("Unable to remove events.out.tfevents!\n\n")
-
-		if hvd.rank() == 0:
-			eval_input_fn = eval_input_fns[0]
-			results = estimator.evaluate(eval_input_fn,
-										steps=None,
-										hooks=eval_hooks)
-		'''
 
 if __name__ == '__main__':
 	tf.app.run()
