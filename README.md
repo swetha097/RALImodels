@@ -8,8 +8,8 @@ TensorFlow models repository with RALI support
 cd $HOME
 mkdir dockerMount
 git clone https://github.com/r-abishek/RALImodels.git
-sudo docker pull abishekr/mlperf_rocm3.5_tf1.15:v0.1.5
-sudo docker run -it --network=host --memory=14G --device=/dev/kfd --device=/dev/dri --ipc=host --shm-size 16G --group-add video --cap-add=SYS_PTRACE --security-opt seccomp=unconfined -v $HOME/dockerMount:/media abishekr/mlperf_rocm3.5_tf1.15:v0.1.5
+sudo docker pull abishekr/mlperf_rocm3.5_tf1.15:v0.2.0
+sudo docker run -it --network=host --memory=14G --device=/dev/kfd --device=/dev/dri --ipc=host --shm-size 16G --group-add video --cap-add=SYS_PTRACE --security-opt seccomp=unconfined -v $HOME/dockerMount:/media abishekr/mlperf_rocm3.5_tf1.15:v0.2.0
 ```
 
 ### Inside the container:
