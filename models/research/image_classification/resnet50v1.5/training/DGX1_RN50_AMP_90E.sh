@@ -14,8 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-WORKSPACE=${1:-"/workspace/rn50v15_tf"}
-DATA_DIR=${2:-"/data"}
+WORKSPACE=${1:-"/media/resultsImagenetTF"}
+DATA_DIR=${2:-"/media/imagenet_tfr"}
+
+echo "WORKSPACE=$WORKSPACE"
+echo "DATA_DIR=$DATA_DIR"
 
 OTHER=${@:3}
 
@@ -23,11 +26,11 @@ if [[ ! -z "${BIND_TO_SOCKET}" ]]; then
     BIND_TO_SOCKET="--bind-to socket"
 fi
 
-mpiexec --allow-run-as-root ${BIND_TO_SOCKET} -np 8 python3 main.py --arch=resnet50 \
+python3 main.py --arch=resnet50 \
     --mode=train_and_evaluate --iter_unit=epoch --num_iter=90 \
-    --batch_size=256 --warmup_steps=100 --use_cosine --label_smoothing 0.1 \
+    --batch_size=4 --warmup_steps=100 --use_cosine --label_smoothing 0.1 \
     --lr_init=0.256 --lr_warmup_epochs=8 --momentum=0.875 --weight_decay=3.0517578125e-05 \
     --use_tf_amp --use_static_loss_scaling --loss_scale 128 \
-    --data_dir=${DATA_DIR}/tfrecords --data_idx_dir=${DATA_DIR}/dali_idx \
+    --data_dir=${DATA_DIR}/tfr --data_idx_dir=${DATA_DIR}/dali_idx \
     --results_dir=${WORKSPACE}/results --weight_init=fan_in ${OTHER}
 
