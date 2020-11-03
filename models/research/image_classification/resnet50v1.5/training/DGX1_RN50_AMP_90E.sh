@@ -28,7 +28,7 @@ fi
 
 python3 main.py --arch=resnet50 \
     --mode=train_and_evaluate --iter_unit=epoch --num_iter=90 \
-    --batch_size=4 --warmup_steps=100 --use_cosine --label_smoothing 0.1 \
+    --batch_size=256 --warmup_steps=100 --use_cosine --label_smoothing 0.1 \
     --lr_init=0.256 --lr_warmup_epochs=8 --momentum=0.875 --weight_decay=3.0517578125e-05 \
     --use_tf_amp --use_static_loss_scaling --loss_scale 128 \
     --data_dir=${DATA_DIR}/tfr --data_idx_dir=${DATA_DIR}/dali_idx \
