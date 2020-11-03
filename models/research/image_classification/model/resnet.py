@@ -147,9 +147,9 @@ class ResnetModel(object):
                 mixup = params['mixup']
                 
             if mode != tf.estimator.ModeKeys.PREDICT: 
-                one_hot_smoothed_labels = tf.one_hot(labels, 1001, 
-                                                     on_value = 1 - eta + eta/1001,
-                                                     off_value = eta/1001)
+                one_hot_smoothed_labels = tf.one_hot(labels, 21, 
+                                                     on_value = 1 - eta + eta/21,
+                                                     off_value = eta/21)
                 if mixup != 0:
 
                     print("Using mixup training with beta=", params['mixup'])
