@@ -1,0 +1,126 @@
+WORKSPACE=/media/resultsImagenetTF
+DATA_DIR=/media/imagenet_tfr
+WARNING:tensorflow:From /usr/local/lib/python3.6/dist-packages/horovod/tensorflow/__init__.py:163: The name tf.global_variables is deprecated. Please use tf.compat.v1.global_variables instead.
+
+WARNING:tensorflow:From /usr/local/lib/python3.6/dist-packages/horovod/tensorflow/__init__.py:189: The name tf.get_default_graph is deprecated. Please use tf.compat.v1.get_default_graph instead.
+
+WARNING:tensorflow:From /media/RALImodels/models/research/image_classification/utils/hooks/training_hooks.py:44: The name tf.train.SessionRunHook is deprecated. Please use tf.estimator.SessionRunHook instead.
+
+WARNING:tensorflow:From /media/RALImodels/models/research/image_classification/utils/optimizers.py:27: The name tf.train.Optimizer is deprecated. Please use tf.compat.v1.train.Optimizer instead.
+
+WARNING:tensorflow:From main.py:36: The name tf.logging.set_verbosity is deprecated. Please use tf.compat.v1.logging.set_verbosity instead.
+
+WARNING:tensorflow:From main.py:36: The name tf.logging.ERROR is deprecated. Please use tf.compat.v1.logging.ERROR instead.
+
+2020-11-03 11:43:56.908768: I tensorflow/core/platform/cpu_feature_guard.cc:142] Your CPU supports instructions that this TensorFlow binary was not compiled to use: AVX512F
+2020-11-03 11:43:56.950016: I tensorflow/core/platform/profile_utils/cpu_utils.cc:94] CPU Frequency: 2600000000 Hz
+2020-11-03 11:43:56.956622: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x4e14d30 initialized for platform Host (this does not guarantee that XLA will be used). Devices:
+2020-11-03 11:43:56.956689: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Host, Default Version
+2020-11-03 11:43:56.961010: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libhip_hcc.so
+2020-11-03 11:43:57.464056: I tensorflow/compiler/xla/service/service.cc:168] XLA service 0x4f1edd0 initialized for platform ROCM (this does not guarantee that XLA will be used). Devices:
+2020-11-03 11:43:57.464102: I tensorflow/compiler/xla/service/service.cc:176]   StreamExecutor device (0): Vega 20, AMDGPU ISA version: gfx906
+2020-11-03 11:43:57.464298: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1650] Found device 0 with properties: 
+name: Vega 20
+AMDGPU ISA: gfx906
+memoryClockRate (GHz) 1.725
+pciBusID 0000:23:00.0
+2020-11-03 11:43:57.654226: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library librocblas.so
+2020-11-03 11:43:57.656605: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libMIOpen.so
+2020-11-03 11:43:57.867036: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library librocfft.so
+2020-11-03 11:43:57.868266: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library librocrand.so
+2020-11-03 11:43:57.868364: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1767] Adding visible gpu devices: 0
+2020-11-03 11:43:57.868390: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1180] Device interconnect StreamExecutor with strength 1 edge matrix:
+2020-11-03 11:43:57.868398: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1186]      0 
+2020-11-03 11:43:57.868405: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1199] 0:   N 
+2020-11-03 11:43:57.868487: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1325] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 15245 MB memory) -> physical GPU (device: 0, name: Vega 20, pci bus id: 0000:23:00.0)
+2020-11-03 11:43:58.588809: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.030498: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.090283: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.368679: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.442073: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.468294: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.475245: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.724584: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.733858: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library librocblas.so
+2020-11-03 11:43:59.737931: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.738147: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.738623: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.739443: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.739530: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.739543: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.739566: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.739534: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.739801: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.739862: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.739694: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.739723: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.739831: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.740256: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.740660: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.740047: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.740084: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.740148: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.740148: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.739801: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.740287: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.740332: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.740347: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.740351: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.740351: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:43:59.740589: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+2020-11-03 11:44:00.070976: I tensorflow/stream_executor/platform/default/dso_loader.cc:44] Successfully opened dynamic library libMIOpen.so
+2020-11-03 11:44:31.408859: I tensorflow/core/graph/gpu_fusion_pass.cc:505] ROCm Fusion is enabled.
+DLL 2020-11-03 11:43:54.366982 - PARAMETER arch : resnet50  mode : evaluate  data_dir : /media/imagenet_tfr/tfr20  data_idx_dir : /media/imagenet_tfr/dali_idx  export_dir : None  to_predict : None  batch_size : 128  num_iter : 20  run_iter : -1  iter_unit : epoch  warmup_steps : 100  data_format : NCHW  model_dir : None  results_dir : /media/resultsImagenetTF/results  finetune_checkpoint : None  use_final_conv : False  quant_delay : 0  quantize : False  use_qdq : False  symmetric : False  log_filename : log.json  display_every : 10  lr_init : 0.256  lr_warmup_epochs : 8  weight_decay : 3.0517578125e-05  weight_init : fan_in  momentum : 0.875  precision : fp32  loss_scale : 128.0  label_smoothing : 0.1  mixup : 0.0  use_static_loss_scaling : True  use_xla : False  use_dali : False  use_tf_amp : True  use_cosine_lr : True  seed : None  gpu_memory_fraction : 0.7  gpu_id : 0  name : False 
+Model HParams:
+Name resnet50
+Number of classes 21
+Compute_format NCHW
+Input_format NHWC
+dtype <dtype: 'float32'>
+Starting Model Evaluation...
+Evaluation Epochs 20.0
+Evaluation Steps 140.0
+Decay Steps 140.0
+Global Batch Size 128
+DLL 2020-11-03 11:44:24.968706 - (0, 100) total_ips : 795.1063462372948 
+DLL 2020-11-03 11:44:25.137443 - (0, 101) total_ips : 763.8104554799149 
+DLL 2020-11-03 11:44:25.298875 - (0, 102) total_ips : 794.8450153307247 
+DLL 2020-11-03 11:44:25.460042 - (0, 103) total_ips : 796.151029239263 
+DLL 2020-11-03 11:44:25.628853 - (0, 104) total_ips : 759.8634917399821 
+DLL 2020-11-03 11:44:25.798080 - (0, 105) total_ips : 758.0556238801165 
+DLL 2020-11-03 11:44:25.970954 - (0, 106) total_ips : 741.9207404960871 
+DLL 2020-11-03 11:44:26.131996 - (0, 107) total_ips : 796.649575389035 
+DLL 2020-11-03 11:44:26.293117 - (0, 108) total_ips : 796.2431305663288 
+DLL 2020-11-03 11:44:26.454083 - (0, 109) total_ips : 796.3399780175118 
+DLL 2020-11-03 11:44:26.615073 - (0, 110) total_ips : 796.7985514667141 
+DLL 2020-11-03 11:44:26.777163 - (0, 111) total_ips : 792.1405952368657 
+DLL 2020-11-03 11:44:26.940266 - (0, 112) total_ips : 790.0063156841452 
+DLL 2020-11-03 11:44:27.101228 - (0, 113) total_ips : 796.5384707828576 
+DLL 2020-11-03 11:44:27.262346 - (0, 114) total_ips : 796.152209890677 
+DLL 2020-11-03 11:44:27.423293 - (0, 115) total_ips : 796.9558644522691 
+DLL 2020-11-03 11:44:27.583843 - (0, 116) total_ips : 798.9863856891984 
+DLL 2020-11-03 11:44:27.744702 - (0, 117) total_ips : 797.308565776694 
+DLL 2020-11-03 11:44:27.905350 - (0, 118) total_ips : 798.2937564960604 
+DLL 2020-11-03 11:44:28.066022 - (0, 119) total_ips : 798.3080009100223 
+DLL 2020-11-03 11:44:28.234405 - (0, 120) total_ips : 761.5903219308474 
+DLL 2020-11-03 11:44:28.396491 - (0, 121) total_ips : 792.1242325834623 
+DLL 2020-11-03 11:44:28.563032 - (0, 122) total_ips : 770.1888377537787 
+DLL 2020-11-03 11:44:28.723737 - (0, 123) total_ips : 798.050492918386 
+DLL 2020-11-03 11:44:28.884552 - (0, 124) total_ips : 797.4684493456067 
+DLL 2020-11-03 11:44:29.054530 - (0, 125) total_ips : 754.4496701826572 
+DLL 2020-11-03 11:44:29.231386 - (0, 126) total_ips : 724.7109058094753 
+DLL 2020-11-03 11:44:29.392490 - (0, 127) total_ips : 796.1675586777178 
+DLL 2020-11-03 11:44:29.553437 - (0, 128) total_ips : 797.0091047153608 
+DLL 2020-11-03 11:44:29.714856 - (0, 129) total_ips : 795.1393190963743 
+DLL 2020-11-03 11:44:29.876613 - (0, 130) total_ips : 794.3287447475883 
+DLL 2020-11-03 11:44:30.037452 - (0, 131) total_ips : 797.3902760346658 
+DLL 2020-11-03 11:44:30.198549 - (0, 132) total_ips : 796.2419496452386 
+DLL 2020-11-03 11:44:30.359801 - (0, 133) total_ips : 795.4939501252056 
+DLL 2020-11-03 11:44:30.520638 - (0, 134) total_ips : 797.4720030421142 
+DLL 2020-11-03 11:44:30.681805 - (0, 135) total_ips : 796.0188184358991 
+DLL 2020-11-03 11:44:30.843180 - (0, 136) total_ips : 795.1039911377164 
+DLL 2020-11-03 11:44:31.004405 - (0, 137) total_ips : 795.6389568547365 
+DLL 2020-11-03 11:44:31.165644 - (0, 138) total_ips : 795.6448525554196 
+DLL 2020-11-03 11:44:31.327561 - (0, 139) total_ips : 793.7204308705822 
+DLL 2020-11-03 11:44:31.855157 - () top1_accuracy : 0.7699776887893677  top5_accuracy : 0.9630022048950195  eval_throughput : 787.6106742306149  eval_latency_avg : 162.6037359237671  eval_latency_p90 : 168.49148273468018  eval_latency_p95 : 169.80334520339966  eval_latency_p99 : 175.02432823181152 
+Model evaluation finished
