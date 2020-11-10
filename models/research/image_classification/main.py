@@ -149,7 +149,7 @@ if __name__ == "__main__":
 
 	runner = Runner(
 		# ========= Model HParams ========= #
-		n_classes=21,
+		n_classes=1001,
 		architecture=FLAGS.arch,
 		input_format='NHWC',
 		compute_format=FLAGS.data_format,

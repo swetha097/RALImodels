@@ -45,7 +45,7 @@ def process_checkpoint(input_ckpt, output_ckpt_path, dense_layer):
             else:
                 new_var_list.append(tf.Variable(curr_var, name=var[0]))
  
-        dense_layer_shape = [1, 1, 2048, 21]
+        dense_layer_shape = [1, 1, 2048, 1001]
         new_var_value = np.reshape(dense_layer_value, dense_layer_shape)
         new_var = tf.Variable(new_var_value, name=dense_layer)
         new_var_list.append(new_var)

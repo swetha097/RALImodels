@@ -43,7 +43,7 @@ class Runner(object):
     def __init__(
         self,
         # ========= Model HParams ========= #
-        n_classes=21,
+        n_classes=1001,
         architecture='resnet50',
         input_format='NHWC',  # NCHW or NHWC
         compute_format='NCHW',  # NCHW or NHWC
