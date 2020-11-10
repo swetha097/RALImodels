@@ -27,7 +27,6 @@ test_configuration "FP16 nodali noxla" "--use_tf_amp"
 test_configuration "FP16 nodali xla" "--use_tf_amp --use_xla"
 
 if [ ! -z $DALI_DIR ]; then
-    # test_configuration "FP16 dali xla" "--use_tf_amp --use_xla --use_dali --data_idx_dir ${DALI_DIR}"
     test_configuration "FP16 dali xla" "--use_tf_amp --use_xla --use_rali --data_idx_dir ${DALI_DIR}"
 fi
 

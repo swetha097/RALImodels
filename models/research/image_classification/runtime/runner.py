@@ -168,7 +168,6 @@ class Runner(object):
             compute_format=model_hparams.compute_format,
             dtype=model_hparams.dtype,
             weight_init=weight_init,
-            # use_dali=use_dali,
             cardinality=architecture['cardinality'] if 'cardinality' in architecture else 1,
             use_se=architecture['use_se'] if 'use_se' in architecture else False,
             se_ratio=architecture['se_ratio'] if 'se_ratio' in architecture else 1
@@ -219,13 +218,6 @@ class Runner(object):
             )
 
         # Limit available GPU memory (tune the size)
-        # if use_rali:
-        #     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_memory_fraction)
-        #     config = tf.ConfigProto(gpu_options=gpu_options)
-        #     config.gpu_options.allow_growth = False
-        # else:
-        #     config = tf.ConfigProto()
-        #     config.gpu_options.allow_growth = True
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
 
@@ -389,11 +381,6 @@ class Runner(object):
         else:
             run_iter = steps_per_epoch * run_iter if iter_unit == "epoch" else run_iter
 
-        # if self.run_hparams.use_dali and self.run_hparams.data_idx_dir is not None:
-        #     idx_filenames = runner_utils.parse_dali_idx_dataset(
-        #         data_idx_dir=self.run_hparams.data_idx_dir, mode="train"
-        #     )
-
         training_hooks = []
 
         if hvd.rank() == 0:
@@ -462,32 +449,9 @@ class Runner(object):
             gpu_id=self.run_hparams.gpu_id
         )
 
-        # if (self.run_hparams.use_rali):
-        #     print("\nDirectory - " + self.run_hparams.data_dir)
-            # train_pipe = HybridTrainPipe(feature_key_map=featureKeyMap, tfrecordreader_type=TFRecordReaderType, batch_size=bs, num_threads=nt, device_id=di, data_dir=trainImagePath, crop=cropSize, rali_cpu=raliCPU)
-            # train_pipe.build()
-            # train_imageIterator =  RALIIterator(train_pipe)
-            # rali.initialize_enumerator(train_imageIterator, 0)
-
         def training_data_fn():
 
             if self.run_hparams.use_rali and self.run_hparams.data_idx_dir is not None:
-                # print("Mode unavailable!")
-                # exit()
-                # if hvd.rank() == 0:
-                #     print("Using DALI input... ")
-
-                # return data_utils.get_dali_input_fn(
-                #     filenames=filenames,
-                #     idx_filenames=idx_filenames,
-                #     batch_size=batch_size,
-                #     height=self.run_hparams.height,
-                #     width=self.run_hparams.width,
-                #     training=True,
-                #     distort_color=self.run_hparams.distort_colors,
-                #     num_threads=self.run_hparams.num_preprocessing_threads,
-                #     deterministic=False if self.run_hparams.seed is None else True
-                # )
 
                 print("\nUsing RALI input in the train input function...")
                 return data_utils.get_rali_train_input_fn(
@@ -601,11 +565,6 @@ class Runner(object):
             num_decay_steps = -1
             num_steps = num_iter
 
-        # if self.run_hparams.use_dali and self.run_hparams.data_idx_dir is not None:
-        #     idx_filenames = runner_utils.parse_dali_idx_dataset(
-        #         data_idx_dir=self.run_hparams.data_idx_dir, mode="validation"
-        #     )
-
         eval_hooks = []
 
         if hvd.rank() == 0:
@@ -621,22 +580,6 @@ class Runner(object):
         def evaluation_data_fn():
 
             if self.run_hparams.use_rali and self.run_hparams.data_idx_dir is not None:
-                # print("Mode unavailable!")
-                # exit()
-                # if hvd.rank() == 0:
-                #     print("Using DALI input... ")
-
-                # return data_utils.get_dali_input_fn(
-                #     filenames=filenames,
-                #     idx_filenames=idx_filenames,
-                #     batch_size=batch_size,
-                #     height=self.run_hparams.height,
-                #     width=self.run_hparams.width,
-                #     training=False,
-                #     distort_color=self.run_hparams.distort_colors,
-                #     num_threads=self.run_hparams.num_preprocessing_threads,
-                #     deterministic=False if self.run_hparams.seed is None else True
-                # )
 
                 print("\nUsing RALI input in the validation input function...")
                 return data_utils.get_rali_val_input_fn(
