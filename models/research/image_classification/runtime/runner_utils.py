@@ -46,7 +46,10 @@ def list_filenames_in_dataset(data_dir, mode, count=True):
     if mode not in ["train", 'validation']:
         raise ValueError("Unknown mode received: %s" % mode)
 
-    filename_pattern = os.path.join(data_dir, '%s-*' % mode)
+    if mode == "train":
+        filename_pattern = os.path.join(data_dir, 'train', '%s-*' % mode)
+    elif mode == "validation":
+        filename_pattern = os.path.join(data_dir, 'val', '%s-*' % mode)
 
     file_list = sorted(tf.gfile.Glob(filename_pattern))
     num_samples = 0 

@@ -22,6 +22,9 @@ import horovod.tensorflow as hvd
 
 from utils import image_processing
 from utils import hvd_utils
+from utils import rali_utils
+
+import numpy as np
 
 __all__ = ["get_synth_input_fn", "normalized_inputs"]
 
@@ -124,6 +127,7 @@ def get_tfrecords_input_fn(filenames, batch_size, height, width, training, disto
     )
 
     ds = ds.prefetch(buffer_size=tf.contrib.data.AUTOTUNE)
+    print(ds)
 
     return ds
 
@@ -169,6 +173,67 @@ def get_inference_input_fn(filenames, height, width, num_threads):
 #     images, labels = preprocessor.get_device_minibatches()
 
 #     return (images, labels)
+
+
+def get_rali_train_input_fn(iterator, batch_size):
+
+    def rali_train_generator():
+        
+        while True:
+            try:
+                i, (train_images_tensor, train_labels_tensor) = rali_utils.RALI_TRAIN_ENUM.__next__()
+            except:
+                rali_utils.initialize_enumerator(iterator, 0)
+                i, (train_images_tensor, train_labels_tensor) = rali_utils.RALI_TRAIN_ENUM.__next__()
+        
+            print("RALI augmentation pipeline - Processing RALI batch %d....." % (i + 1))
+        
+            train_images_tensor = np.transpose(train_images_tensor, [0, 2, 3, 1])
+        
+            processed_train_tensors_tuple = (train_images_tensor, train_labels_tensor)
+        
+            yield processed_train_tensors_tuple
+        
+    rali_train_dataset = tf.data.Dataset.from_generator(
+        rali_train_generator,
+        output_types = (tf.float32, tf.int32), 
+        output_shapes = ((batch_size, 224, 224, 3), (batch_size,))
+        )
+
+    print("\nrali_train_dataset = ", rali_train_dataset)
+    rali_one_shot_iterator = rali_train_dataset.make_one_shot_iterator()
+
+    return rali_one_shot_iterator.get_next()
+
+def get_rali_val_input_fn(iterator, batch_size):
+
+    def rali_val_generator():
+        
+        while True:
+            try:
+                i, (val_images_tensor, val_labels_tensor) = rali_utils.RALI_VAL_ENUM.__next__()
+            except:
+                rali_utils.initialize_enumerator(iterator, 1)
+                i, (val_images_tensor, val_labels_tensor) = rali_utils.RALI_VAL_ENUM.__next__()
+        
+            print("RALI augmentation pipeline - Processing RALI batch %d....." % (i + 1))
+        
+            val_images_tensor = np.transpose(val_images_tensor, [0, 2, 3, 1])
+
+            processed_val_tensors_tuple = (val_images_tensor, val_labels_tensor)
+        
+        yield processed_val_tensors_tuple
+        
+    rali_val_dataset = tf.data.Dataset.from_generator(
+        rali_val_generator,
+        output_types = (tf.float32, tf.int32), 
+        output_shapes = ((batch_size, 224, 224, 3), (batch_size,))
+        )
+
+    print("\nrali_val_dataset = ", rali_val_dataset)
+    rali_one_shot_iterator = rali_val_dataset.make_one_shot_iterator()
+
+    return rali_one_shot_iterator.get_next()
 
 
 def normalized_inputs(inputs):

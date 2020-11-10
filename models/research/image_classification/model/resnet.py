@@ -54,7 +54,7 @@ class ResnetModel(object):
         input_format='NHWC',
         weight_init='fan_out',
         dtype=tf.float32,
-        use_dali=False,
+        # use_dali=False,
         cardinality=1,
         use_se=False,
         se_ratio=1,
@@ -69,7 +69,7 @@ class ResnetModel(object):
             layers_depth=layers_depth,
             expansions=expansions,
             model_name=model_name,
-            use_dali=use_dali,
+            # use_dali=use_dali,
             cardinality=cardinality,
             use_se=use_se,
             se_ratio=se_ratio
@@ -119,7 +119,8 @@ class ResnetModel(object):
                 if p not in params:
                     raise RuntimeError("Parameter {} is missing.".format(p))
 
-        if mode == tf.estimator.ModeKeys.TRAIN and not self.model_hparams.use_dali:
+        # if mode == tf.estimator.ModeKeys.TRAIN and not self.model_hparams.use_dali:
+        if mode == tf.estimator.ModeKeys.TRAIN:
 
             with tf.device('/cpu:0'):
                 # Stage inputs on the host
@@ -136,8 +137,9 @@ class ResnetModel(object):
 
             # Subtract mean per channel
             # and enforce values between [-1, 1]
-            if not self.model_hparams.use_dali:
-                features = normalized_inputs(features)
+            # if not self.model_hparams.use_dali:
+            #     features = normalized_inputs(features)
+            features = normalized_inputs(features)
 
             mixup = 0
             eta = 0
@@ -324,10 +326,11 @@ class ResnetModel(object):
                     backprop_op = optimizer.minimize(total_loss, gate_gradients=gate_gradients, global_step=global_step)
 
                     
-                    if self.model_hparams.use_dali:
-                        train_ops = tf.group(backprop_op, update_ops, name='train_ops')
-                    else:
-                        train_ops = tf.group(backprop_op, cpu_prefetch_op, gpu_prefetch_op, update_ops, name='train_ops')
+                    # if self.model_hparams.use_dali:
+                    #     train_ops = tf.group(backprop_op, update_ops, name='train_ops')
+                    # else:
+                    #     train_ops = tf.group(backprop_op, cpu_prefetch_op, gpu_prefetch_op, update_ops, name='train_ops')
+                    train_ops = tf.group(backprop_op, cpu_prefetch_op, gpu_prefetch_op, update_ops, name='train_ops')
 
                     return tf.estimator.EstimatorSpec(mode=mode, loss=total_loss, train_op=train_ops)
 
