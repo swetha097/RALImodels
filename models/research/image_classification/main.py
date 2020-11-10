@@ -51,7 +51,6 @@ class HybridTrainPipe(Pipeline):
 		decoder_device = 'cpu' if rali_cpu else 'mixed'
 		device_memory_padding = 211025920 if decoder_device == 'mixed' else 0
 		host_memory_padding = 140544512 if decoder_device == 'mixed' else 0
-		# self.decode = ops.ImageDecoder(user_feature_key_map=feature_key_map, device=decoder_device, output_type=types.RGB)
 		self.decode = ops.ImageDecoderRandomCrop(user_feature_key_map=feature_key_map,
 												device=decoder_device, output_type=types.RGB,
 												device_memory_padding=device_memory_padding,
@@ -93,12 +92,6 @@ class HybridValPipe(Pipeline):
 		rali_device = 'cpu' if rali_cpu else 'gpu'
 		decoder_device = 'cpu' if rali_cpu else 'mixed'
 		self.decode = ops.ImageDecoder(user_feature_key_map=feature_key_map, device=decoder_device, output_type=types.RGB)
-		# self.decode = ops.ImageDecoderRandomCrop(device=decoder_device, output_type=types.RGB,
-		#                                             device_memory_padding=device_memory_padding,
-		#                                             host_memory_padding=host_memory_padding,
-		#                                             random_aspect_ratio=[0.8, 1.25],
-		#                                             random_area=[0.08, 1.0],
-		#                                             num_attempts=100)
 		self.res = ops.Resize(device=rali_device, resize_x=scale[0], resize_y=scale[1])
 		self.centrecrop = ops.CentreCrop(crop=centreCrop)
 		self.cmnp = ops.CropMirrorNormalize(device="cpu",
@@ -108,7 +101,6 @@ class HybridValPipe(Pipeline):
 											image_type=types.RGB,
 											mean=[0 ,0,0],
 											std=[255,255,255])
-		# self.coin = ops.CoinFlip(probability=0.5)
 		print('rali "{0}" variant'.format(rali_device))
 
 	def define_graph(self):
@@ -123,7 +115,6 @@ class HybridValPipe(Pipeline):
 
 if __name__ == "__main__":
 
-	# bs = 128
 	nt = 1
 	di = 0
 	raliCPU = True
@@ -181,7 +172,6 @@ if __name__ == "__main__":
 	)
 
 	trainRecordsPath = FLAGS.data_dir + "/train/"
-	# trainRecordsPath = "/media/imagenet_tfr/trial"
 	valRecordsPath = FLAGS.data_dir + "/val/"
 	print("Train records path = " + trainRecordsPath)
 	print("Val records path = " + valRecordsPath)
