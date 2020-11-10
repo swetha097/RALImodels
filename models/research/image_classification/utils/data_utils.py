@@ -222,7 +222,7 @@ def get_rali_val_input_fn(iterator, batch_size):
 
             processed_val_tensors_tuple = (val_images_tensor, val_labels_tensor)
         
-        yield processed_val_tensors_tuple
+            yield processed_val_tensors_tuple
         
     rali_val_dataset = tf.data.Dataset.from_generator(
         rali_val_generator,

@@ -104,7 +104,7 @@ class HybridValPipe(Pipeline):
 		self.cmnp = ops.CropMirrorNormalize(device="cpu",
 											output_dtype=types.FLOAT,
 											output_layout=types.NCHW,
-											crop=crop,
+											crop=centreCrop,
 											image_type=types.RGB,
 											mean=[0 ,0,0],
 											std=[255,255,255])
@@ -193,7 +193,6 @@ if __name__ == "__main__":
 			train_pipe.build()
 			train_imageIterator = RALIIterator(train_pipe)
 			rali_utils.initialize_enumerator(train_imageIterator, 0)
-			input("\nPress Enter to continue...")
 
 		runner.train(
 			train_imageIterator=train_imageIterator,
@@ -229,7 +228,7 @@ if __name__ == "__main__":
 		elif not hvd_utils.is_using_hvd() or hvd.rank() == 0:
 			val_imageIterator = 0
 			if(FLAGS.use_rali):
-				val_pipe = HybridValPipe(feature_key_map=featureKeyMap, tfrecordreader_type=TFRecordReaderType, batch_size=FLAGS.batch_size, num_threads=nt, device_id=di, data_dir=valRecordsPath, scale=valScaleSize, crop=valCentreCropSize, rali_cpu=raliCPU) 
+				val_pipe = HybridValPipe(feature_key_map=featureKeyMap, tfrecordreader_type=TFRecordReaderType, batch_size=FLAGS.batch_size, num_threads=nt, device_id=di, data_dir=valRecordsPath, scale=valScaleSize, centreCrop=valCentreCropSize, rali_cpu=raliCPU) 
 				val_pipe.build()
 				val_imageIterator = RALIIterator(val_pipe)
 				rali_utils.initialize_enumerator(val_imageIterator, 1)
