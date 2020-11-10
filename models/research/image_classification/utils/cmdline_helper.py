@@ -261,7 +261,12 @@ def parse_cmdline(available_arch):
         help="Enable XLA (Accelerated Linear Algebra) computation for improved performance."
     )
 
-    _add_bool_argument(parser=p, name="use_dali", default=False, required=False, help="Enable DALI data input.")
+    _add_bool_argument(
+        parser=p, 
+        name="use_rali", 
+        default=False, 
+        required=False, 
+        help="Enable RALI data input.")
 
     _add_bool_argument(
         parser=p,

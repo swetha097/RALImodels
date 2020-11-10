@@ -61,7 +61,7 @@ class Runner(object):
         # ======= Optimization HParams ======== #
         use_xla=False,
         use_tf_amp=False,
-        use_dali=False,
+        use_rali=False,
         gpu_memory_fraction=1.0,
         gpu_id=0,
 
@@ -135,12 +135,12 @@ class Runner(object):
             seed=tf_seed
         )
 
-        num_preprocessing_threads = 10 if not use_dali else 4
+        num_preprocessing_threads = 10 if not use_rali else 4
         run_config_performance = tf.contrib.training.HParams(
             num_preprocessing_threads=num_preprocessing_threads,
             use_tf_amp=use_tf_amp,
             use_xla=use_xla,
-            use_dali=use_dali,
+            use_rali=use_rali,
             gpu_memory_fraction=gpu_memory_fraction,
             gpu_id=gpu_id
         )
@@ -168,7 +168,7 @@ class Runner(object):
             compute_format=model_hparams.compute_format,
             dtype=model_hparams.dtype,
             weight_init=weight_init,
-            use_dali=use_dali,
+            # use_dali=use_dali,
             cardinality=architecture['cardinality'] if 'cardinality' in architecture else 1,
             use_se=architecture['use_se'] if 'use_se' in architecture else False,
             se_ratio=architecture['se_ratio'] if 'se_ratio' in architecture else 1
@@ -211,7 +211,7 @@ class Runner(object):
             return worker_batch_size
 
     @staticmethod
-    def _get_session_config(mode, use_xla, use_dali, gpu_memory_fraction, gpu_id=0):
+    def _get_session_config(mode, use_xla, use_rali, gpu_memory_fraction, gpu_id=0):
 
         if mode not in ["train", 'validation', 'benchmark', 'inference']:
             raise ValueError(
@@ -219,13 +219,15 @@ class Runner(object):
             )
 
         # Limit available GPU memory (tune the size)
-        if use_dali:
-            gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_memory_fraction)
-            config = tf.ConfigProto(gpu_options=gpu_options)
-            config.gpu_options.allow_growth = False
-        else:
-            config = tf.ConfigProto()
-            config.gpu_options.allow_growth = True
+        # if use_rali:
+        #     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_memory_fraction)
+        #     config = tf.ConfigProto(gpu_options=gpu_options)
+        #     config.gpu_options.allow_growth = False
+        # else:
+        #     config = tf.ConfigProto()
+        #     config.gpu_options.allow_growth = True
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
 
         config.allow_soft_placement = True
         config.log_device_placement = False
@@ -255,7 +257,7 @@ class Runner(object):
         return config
 
     @staticmethod
-    def _get_run_config(mode, model_dir, use_xla, use_dali, gpu_memory_fraction, gpu_id=0, seed=None):
+    def _get_run_config(mode, model_dir, use_xla, use_rali, gpu_memory_fraction, gpu_id=0, seed=None):
 
         if mode not in ["train", 'validation', 'benchmark', 'inference']:
             raise ValueError(
@@ -277,7 +279,7 @@ class Runner(object):
             save_checkpoints_steps=None,
             save_checkpoints_secs=None,
             session_config=Runner._get_session_config(
-                mode=mode, use_xla=use_xla, use_dali=use_dali, gpu_memory_fraction=gpu_memory_fraction, gpu_id=gpu_id
+                mode=mode, use_xla=use_xla, use_rali=use_rali, gpu_memory_fraction=gpu_memory_fraction, gpu_id=gpu_id
             ),
             keep_checkpoint_max=5,
             keep_checkpoint_every_n_hours=1e6,  # disabled
@@ -299,7 +301,7 @@ class Runner(object):
 
         return config
 
-    def _get_estimator(self, mode, run_params, use_xla, use_dali, gpu_memory_fraction, gpu_id=0):
+    def _get_estimator(self, mode, run_params, use_xla, use_rali, gpu_memory_fraction, gpu_id=0):
 
         if mode not in ["train", 'validation', 'benchmark', 'inference']:
             raise ValueError(
@@ -310,7 +312,7 @@ class Runner(object):
             mode=mode,
             model_dir=self.run_hparams.model_dir,
             use_xla=use_xla,
-            use_dali=use_dali,
+            use_rali=use_rali,
             gpu_memory_fraction=gpu_memory_fraction,
             gpu_id=gpu_id,
             seed=self.run_hparams.seed
@@ -322,6 +324,7 @@ class Runner(object):
 
     def train(
         self,
+        train_imageIterator,
         iter_unit,
         num_iter,
         run_iter,
@@ -386,10 +389,10 @@ class Runner(object):
         else:
             run_iter = steps_per_epoch * run_iter if iter_unit == "epoch" else run_iter
 
-        if self.run_hparams.use_dali and self.run_hparams.data_idx_dir is not None:
-            idx_filenames = runner_utils.parse_dali_idx_dataset(
-                data_idx_dir=self.run_hparams.data_idx_dir, mode="train"
-            )
+        # if self.run_hparams.use_dali and self.run_hparams.data_idx_dir is not None:
+        #     idx_filenames = runner_utils.parse_dali_idx_dataset(
+        #         data_idx_dir=self.run_hparams.data_idx_dir, mode="train"
+        #     )
 
         training_hooks = []
 
@@ -454,16 +457,23 @@ class Runner(object):
             mode='train',
             run_params=estimator_params,
             use_xla=self.run_hparams.use_xla,
-            use_dali=self.run_hparams.use_dali,
+            use_rali=self.run_hparams.use_rali,
             gpu_memory_fraction=self.run_hparams.gpu_memory_fraction,
             gpu_id=self.run_hparams.gpu_id
         )
 
+        # if (self.run_hparams.use_rali):
+        #     print("\nDirectory - " + self.run_hparams.data_dir)
+            # train_pipe = HybridTrainPipe(feature_key_map=featureKeyMap, tfrecordreader_type=TFRecordReaderType, batch_size=bs, num_threads=nt, device_id=di, data_dir=trainImagePath, crop=cropSize, rali_cpu=raliCPU)
+            # train_pipe.build()
+            # train_imageIterator =  RALIIterator(train_pipe)
+            # rali.initialize_enumerator(train_imageIterator, 0)
+
         def training_data_fn():
 
-            if self.run_hparams.use_dali and self.run_hparams.data_idx_dir is not None:
-                print("Mode unavailable!")
-                exit()
+            if self.run_hparams.use_rali and self.run_hparams.data_idx_dir is not None:
+                # print("Mode unavailable!")
+                # exit()
                 # if hvd.rank() == 0:
                 #     print("Using DALI input... ")
 
@@ -478,6 +488,13 @@ class Runner(object):
                 #     num_threads=self.run_hparams.num_preprocessing_threads,
                 #     deterministic=False if self.run_hparams.seed is None else True
                 # )
+
+                print("\nUsing RALI input in the train input function...")
+                return data_utils.get_rali_train_input_fn(
+                    iterator=train_imageIterator,
+                    batch_size=batch_size
+                )
+
 
             elif self.run_hparams.data_dir is not None:
 
@@ -533,6 +550,7 @@ class Runner(object):
 
     def evaluate(
         self,
+        val_imageIterator,
         iter_unit,
         num_iter,
         batch_size,
@@ -543,7 +561,7 @@ class Runner(object):
         quantize=False,
         symmetric=False,
         use_qdq=False,
-        use_final_conv=False,
+        use_final_conv=False
     ):
 
         if iter_unit not in ["epoch", "batch"]:
@@ -564,7 +582,7 @@ class Runner(object):
             mode='validation',
             run_params=estimator_params,
             use_xla=self.run_hparams.use_xla,
-            use_dali=self.run_hparams.use_dali,
+            use_rali=self.run_hparams.use_rali,
             gpu_memory_fraction=self.run_hparams.gpu_memory_fraction,
             gpu_id=self.run_hparams.gpu_id
         )
@@ -583,10 +601,10 @@ class Runner(object):
             num_decay_steps = -1
             num_steps = num_iter
 
-        if self.run_hparams.use_dali and self.run_hparams.data_idx_dir is not None:
-            idx_filenames = runner_utils.parse_dali_idx_dataset(
-                data_idx_dir=self.run_hparams.data_idx_dir, mode="validation"
-            )
+        # if self.run_hparams.use_dali and self.run_hparams.data_idx_dir is not None:
+        #     idx_filenames = runner_utils.parse_dali_idx_dataset(
+        #         data_idx_dir=self.run_hparams.data_idx_dir, mode="validation"
+        #     )
 
         eval_hooks = []
 
@@ -602,9 +620,9 @@ class Runner(object):
 
         def evaluation_data_fn():
 
-            if self.run_hparams.use_dali and self.run_hparams.data_idx_dir is not None:
-                print("Mode unavailable!")
-                exit()
+            if self.run_hparams.use_rali and self.run_hparams.data_idx_dir is not None:
+                # print("Mode unavailable!")
+                # exit()
                 # if hvd.rank() == 0:
                 #     print("Using DALI input... ")
 
@@ -619,6 +637,12 @@ class Runner(object):
                 #     num_threads=self.run_hparams.num_preprocessing_threads,
                 #     deterministic=False if self.run_hparams.seed is None else True
                 # )
+
+                print("\nUsing RALI input in the validation input function...")
+                return data_utils.get_rali_val_input_fn(
+                    iterator=val_imageIterator,
+                    batch_size=batch_size
+                )
 
             elif self.run_hparams.data_dir is not None:
                 return data_utils.get_tfrecords_input_fn(
@@ -698,7 +722,7 @@ class Runner(object):
             mode='inference',
             run_params=estimator_params,
             use_xla=self.run_hparams.use_xla,
-            use_dali=self.run_hparams.use_dali,
+            use_rali=self.run_hparams.use_rali,
             gpu_memory_fraction=self.run_hparams.gpu_memory_fraction
         )
 
