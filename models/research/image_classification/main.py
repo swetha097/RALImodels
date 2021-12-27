@@ -60,7 +60,7 @@ def	HybridTrainPipe(feature_key_map, tfrecordreader_type, batch_size, num_thread
 												host_memory_padding=host_memory_padding,
 												random_aspect_ratio=[0.8, 1.25],
 												random_area=[0.1, 1.0],
-												num_attempts=100)
+												num_attempts=100, path=data_dir)
 		res = fn.resize(decode, device=rali_device, resize_x=crop[0], resize_y=crop[1])
 		coin = fn.random.coin_flip(probability=0.5)
 		cmnp = fn.crop_mirror_normalize(res, device="cpu",
@@ -71,7 +71,7 @@ def	HybridTrainPipe(feature_key_map, tfrecordreader_type, batch_size, num_thread
 											image_type=types.RGB,
 											mean=[0 ,0,0],
 											std=[255,255,255])
-		pipe.set_outputs(cmnp,labels)
+		pipe.set_outputs(cmnp)
 		print('rali "{0}" variant'.format(rali_device))
 	return pipe
 
@@ -90,7 +90,7 @@ def	HybridValPipe(feature_key_map, tfrecordreader_type, batch_size, num_threads,
 		labels = inputs["image/class/label"]
 		rali_device = 'cpu' if rali_cpu else 'gpu'
 		decoder_device = 'cpu' if rali_cpu else 'mixed'
-		decode = fn.decoders.image(jpegs, user_feature_key_map=feature_key_map, device=decoder_device, output_type=types.RGB)
+		decode = fn.decoders.image(jpegs, user_feature_key_map=feature_key_map, device=decoder_device, output_type=types.RGB, path=data_dir)
 		res = fn.resize(decode, device=rali_device, resize_x=scale[0], resize_y=scale[1])
 		centrecrop = fn.centre_crop(res, crop=centreCrop)
 		cmnp = fn.crop_mirror_normalize(centrecrop, device="cpu",
@@ -100,7 +100,7 @@ def	HybridValPipe(feature_key_map, tfrecordreader_type, batch_size, num_threads,
 											image_type=types.RGB,
 											mean=[0 ,0,0],
 											std=[255,255,255])
-		pipe.set_outputs(cmnp, labels)
+		pipe.set_outputs(cmnp)
 	print('rali "{0}" variant'.format(rali_device))
 	return pipe
 
@@ -119,7 +119,7 @@ if __name__ == "__main__":
 		'image/class/label':'image/class/label',
 		'image/filename':'image/filename'
 	}
-	
+
 	tf.logging.set_verbosity(tf.logging.ERROR)
 
 	FLAGS = parse_cmdline(model_architectures.keys())
@@ -165,14 +165,14 @@ if __name__ == "__main__":
 
 	trainRecordsPath = FLAGS.data_dir + "/train/"
 	valRecordsPath = FLAGS.data_dir + "/val/"
+
 	print("Train records path = " + trainRecordsPath)
 	print("Val records path = " + valRecordsPath)
-
 	if FLAGS.mode in ["train", "train_and_evaluate", "training_benchmark"]:
 		train_imageIterator = 0
 		if(FLAGS.use_rali):
-			train_pipe = HybridTrainPipe(feature_key_map=featureKeyMap, tfrecordreader_type=TFRecordReaderType, batch_size=FLAGS.batch_size, num_threads=nt, device_id=di, data_dir=trainRecordsPath, crop=trainCropSize, rali_cpu=raliCPU) 
-			# train_pipe.build()
+			train_pipe = HybridTrainPipe(feature_key_map=featureKeyMap, tfrecordreader_type=TFRecordReaderType, batch_size=FLAGS.batch_size, num_threads=nt, device_id=di, data_dir=trainRecordsPath, crop=trainCropSize, rali_cpu=raliCPU)
+			train_pipe.build()
 			train_imageIterator = RALIIterator(train_pipe)
 			rali_utils.initialize_enumerator(train_imageIterator, 0)
 
@@ -210,8 +210,8 @@ if __name__ == "__main__":
 		elif not hvd_utils.is_using_hvd() or hvd.rank() == 0:
 			val_imageIterator = 0
 			if(FLAGS.use_rali):
-				val_pipe = HybridValPipe(feature_key_map=featureKeyMap, tfrecordreader_type=TFRecordReaderType, batch_size=FLAGS.batch_size, num_threads=nt, device_id=di, data_dir=valRecordsPath, scale=valScaleSize, centreCrop=valCentreCropSize, rali_cpu=raliCPU) 
-				# val_pipe.build()
+				val_pipe = HybridValPipe(feature_key_map=featureKeyMap, tfrecordreader_type=TFRecordReaderType, batch_size=FLAGS.batch_size, num_threads=nt, device_id=di, data_dir=valRecordsPath, scale=valScaleSize, centreCrop=valCentreCropSize, rali_cpu=raliCPU)
+				val_pipe.build()
 				val_imageIterator = RALIIterator(val_pipe)
 				rali_utils.initialize_enumerator(val_imageIterator, 1)
 
