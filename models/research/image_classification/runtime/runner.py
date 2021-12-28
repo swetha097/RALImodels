@@ -436,10 +436,10 @@ class Runner(object):
             'symmetric': symmetric,
             'quant_delay': quant_delay
         }
-        
+
         if finetune_checkpoint:
            estimator_params['finetune_checkpoint']=finetune_checkpoint
-        
+
         image_classifier = self._get_estimator(
             mode='train',
             run_params=estimator_params,

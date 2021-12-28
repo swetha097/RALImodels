@@ -31,4 +31,4 @@ python3 main.py --arch=resnet50 \
     --lr_init=0.256 --lr_warmup_epochs=8 --momentum=0.875 --weight_decay=3.0517578125e-05 \
     --use_tf_amp --use_static_loss_scaling --loss_scale 128 \
     --data_dir=${DATA_DIR}/tfr20 --data_idx_dir=${DATA_DIR}/dali_idx \
-    --results_dir=${WORKSPACE}/results --weight_init=fan_in ${OTHER}
+    --results_dir=${WORKSPACE}/results --weight_init=fan_in ${OTHER} | tee -a TF_Classification.run.log.${CURRENTDATE}
