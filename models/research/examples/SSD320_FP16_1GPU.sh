@@ -20,7 +20,7 @@ export TF_ENABLE_CUBLAS_TENSOR_OP_MATH_FP32=${TENSOR_OPS}
 export TF_ENABLE_CUDNN_TENSOR_OP_MATH_FP32=${TENSOR_OPS}
 export TF_ENABLE_CUDNN_RNN_TENSOR_OP_MATH_FP32=${TENSOR_OPS}
 
-time python3 -u ./object_detection/model_main.py \
+time python3 -u ./object_detection/model_main_new.py \
        --pipeline_config_path=${PIPELINE_CONFIG_PATH} \
        --model_dir=${CKPT_DIR} \
        --alsologtostder \
