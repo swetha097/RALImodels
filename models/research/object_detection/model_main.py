@@ -45,6 +45,7 @@ import horovod.tensorflow as hvd
 import dllogger
 import time
 import os
+import numpy as np
 
 from object_detection import model_hparams
 from object_detection import model_lib
@@ -208,6 +209,26 @@ class HybridValPipe(Pipeline):
 		output = self.cmnp(images, mirror=rng)
 		return [output, labels]
 
+def get_onehot(image_labels_array, numClasses):
+    one_hot_vector_list = []
+    for label in image_labels_array:
+        one_hot_vector = np.zeros(numClasses)
+        if label[0] != 0:
+            np.put(one_hot_vector, label[0] - 1, 1)
+        one_hot_vector_list.append(one_hot_vector)
+
+    one_hot_vector_array = np.array(one_hot_vector_list)
+
+    return one_hot_vector_array
+
+
+def get_weights(num_bboxes):
+    weights_array = np.zeros(100)
+    for pos in list(range(num_bboxes)):
+        np.put(weights_array, pos, 1)
+
+    return weights_array
+
 def main(unused_argv):
 	
 	trainImagePath = "/media/ssdTraining/dataOriginal/coco2017_tfrecords/train/"
@@ -239,6 +260,30 @@ def main(unused_argv):
 	val_pipe.build()
 	val_imageIterator = RALIIterator(val_pipe)
 	rali.initialize_enumerator(val_imageIterator, 1)
+	numClasses = 1000
+
+	for i, (images_array, bboxes_array, labels_array, num_bboxes_array) in enumerate(train_imageIterator, 0):
+		images_array = np.transpose(images_array, [0, 2, 3, 1])
+		print("RALI augmentation pipeline - Processing batch %d....." % i)
+		if (i%100 == 0 or i == 924):
+			for element in list(range(bs)):
+				if element   ==  bs -1 or element == 0:
+					print("Processing image %d....." % element)
+					features_dict = {
+                	"image": images_array[element],
+                	"true_image_shape": np.array([len(images_array[element]), len(images_array[element, 0]), len(images_array[element, 0, 0])])
+      	      		}
+					labels_dict = {
+						"num_groundtruth_boxes": num_bboxes_array[element],
+                		"groundtruth_boxes": bboxes_array[element],
+                		"groundtruth_classes": get_onehot(labels_array[element], numClasses),
+                		"groundtruth_weights": get_weights(num_bboxes_array[element])
+					}
+					processed_tensors = (features_dict, labels_dict)
+					print("\nPROCESSED_TENSORS:\n", processed_tensors)
+		
+
+	'''
 
 	tf.logging.set_verbosity(tf.logging.INFO)
 	if FLAGS.amp:
@@ -316,6 +361,7 @@ def main(unused_argv):
 				results = estimator.evaluate(eval_input_fn,
 											steps=100,
 											hooks=eval_hooks)
+	'''
 
 if __name__ == '__main__':
 	tf.app.run()
