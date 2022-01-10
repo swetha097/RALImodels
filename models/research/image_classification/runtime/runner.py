@@ -436,10 +436,10 @@ class Runner(object):
             'symmetric': symmetric,
             'quant_delay': quant_delay
         }
-        
+
         if finetune_checkpoint:
            estimator_params['finetune_checkpoint']=finetune_checkpoint
-        
+
         image_classifier = self._get_estimator(
             mode='train',
             run_params=estimator_params,
@@ -619,6 +619,7 @@ class Runner(object):
             )
 
             eval_throughput = self.eval_logging_hook.mean_throughput.value()
+            print("Throughput ********************************************",eval_throughput)
             eval_latencies = np.array(self.eval_logging_hook.latencies) * 1000
             eval_latencies_q = np.quantile(eval_latencies, q=[0.9, 0.95, 0.99])
             eval_latencies_mean = np.mean(eval_latencies)
