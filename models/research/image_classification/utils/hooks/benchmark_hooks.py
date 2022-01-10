@@ -35,28 +35,19 @@ class BenchmarkLoggingHook(tf.train.SessionRunHook):
         self.current_step = 0
         self.t0 = None
         self.mean_throughput = MeanAccumulator()
-        # print("mean_throughput initail value:",self.mean_throughput)
 
     def before_run(self, run_context):
         self.t0 = time.time()
-        # print("BEFORE BATCH TIME",self.t0)
 
     def after_run(self, run_context, run_values):
         batch_time = time.time() - self.t0
         ips = self.global_batch_size / batch_time
-        # print("IPS ",ips)
-        # print("AFTER BATCH TIME diff",batch_time)
-        # print("current step:",self.current_step)
-        # print("warmup steps",self.warmup_steps)
+
         if self.current_step >= self.warmup_steps:
-            # print("CONDITION SATISFIED")
             self.latencies.append(batch_time)
             self.mean_throughput.consume(ips)
-            # print("latenciessssssss:",self.latencies)
-            # print("mean thorughputtttttt: ",self.mean_throughput)
 
             dllogger.log(data={"total_ips" : ips},
                          step=(0, self.current_step))
 
         self.current_step += 1
-        print("current step *******************************",self.current_step)
