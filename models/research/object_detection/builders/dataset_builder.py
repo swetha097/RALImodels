@@ -172,7 +172,7 @@ def rali_processed_train_tensors_generator(rali_batch_size, num_classes, iterato
   groundtruth_classes_tensor = []
   groundtruth_weights_tensor = []
 
-  pool = mp.Pool(mp.cpu_count())
+  # pool = mp.Pool(mp.cpu_count())
   flag = True
   count = 0
 
@@ -190,7 +190,7 @@ def rali_processed_train_tensors_generator(rali_batch_size, num_classes, iterato
     
     images_array = np.transpose(images_array, [0, 2, 3, 1])
 
-    result = pool.map(rali_parallelized_tensor_generator, np.array([
+    result = map(rali_parallelized_tensor_generator, np.array([
         [images_array[element], bboxes_array[element], labels_array[element], num_bboxes_array[element], sourceID + element, num_classes] for element in list(range(rali_batch_size))
         ]))
 
@@ -207,7 +207,7 @@ def rali_processed_train_tensors_generator(rali_batch_size, num_classes, iterato
 
     flag = not(count % int(1536 / rali_batch_size) == 0)
 
-  pool.close()
+  # pool.close()
 
   return [np.array(images_tensor, dtype=np.float32),
   np.array(hash_key_tensor),
@@ -229,7 +229,7 @@ def rali_processed_val_tensors_generator(rali_batch_size, num_classes, iterator)
   groundtruth_classes_tensor = []
   groundtruth_weights_tensor = []
 
-  pool = mp.Pool(mp.cpu_count())
+  # pool = mp.Pool(mp.cpu_count())
   flag = True
   count = 0
 
@@ -247,7 +247,7 @@ def rali_processed_val_tensors_generator(rali_batch_size, num_classes, iterator)
     
     images_array = np.transpose(images_array, [0, 2, 3, 1])
 
-    result = pool.map(rali_parallelized_tensor_generator, np.array([
+    result = map(rali_parallelized_tensor_generator, np.array([
         [images_array[element], bboxes_array[element], labels_array[element], num_bboxes_array[element], sourceID + element, num_classes] for element in list(range(rali_batch_size))
         ]))
 
@@ -264,7 +264,7 @@ def rali_processed_val_tensors_generator(rali_batch_size, num_classes, iterator)
 
     flag = not(count % int(1536 / rali_batch_size) == 0)
 
-  pool.close()
+  # pool.close()
   
   return [np.array(images_tensor, dtype=np.float32),
   np.array(hash_key_tensor),
