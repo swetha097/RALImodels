@@ -209,25 +209,7 @@ class HybridValPipe(Pipeline):
 		output = self.cmnp(images, mirror=rng)
 		return [output, labels]
 
-def get_onehot(image_labels_array, numClasses):
-    one_hot_vector_list = []
-    for label in image_labels_array:
-        one_hot_vector = np.zeros(numClasses)
-        if label[0] != 0:
-            np.put(one_hot_vector, label[0] - 1, 1)
-        one_hot_vector_list.append(one_hot_vector)
 
-    one_hot_vector_array = np.array(one_hot_vector_list)
-
-    return one_hot_vector_array
-
-
-def get_weights(num_bboxes):
-    weights_array = np.zeros(100)
-    for pos in list(range(num_bboxes)):
-        np.put(weights_array, pos, 1)
-
-    return weights_array
 
 def main(unused_argv):
 	
@@ -281,9 +263,6 @@ def main(unused_argv):
 					}
 					processed_tensors = (features_dict, labels_dict)
 					print("\nPROCESSED_TENSORS:\n", processed_tensors)
-		
-
-	'''
 
 	tf.logging.set_verbosity(tf.logging.INFO)
 	if FLAGS.amp:
@@ -361,7 +340,6 @@ def main(unused_argv):
 				results = estimator.evaluate(eval_input_fn,
 											steps=100,
 											hooks=eval_hooks)
-	'''
 
 if __name__ == '__main__':
 	tf.app.run()
