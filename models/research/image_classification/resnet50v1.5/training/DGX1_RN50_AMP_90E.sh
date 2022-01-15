@@ -21,6 +21,11 @@ echo "DATA_DIR=$DATA_DIR"
 
 CURRENTDATE=`date +"%Y-%m-%d-%T"`
 
+# start timing
+start=$(date +%s)
+start_fmt=$(date +%Y-%m-%d\ %r)
+echo "STARTING TIMING RUN AT $start_fmt" | tee -a run.log.${CURRENTDATE}
+
 OTHER=${@:3}
 
 if [[ ! -z "${BIND_TO_SOCKET}" ]]; then
@@ -50,3 +55,7 @@ python3 main.py --arch=resnet50 \
     --use_tf_amp --use_static_loss_scaling --loss_scale 128 \
     --data_dir=${DATA_DIR}/tfr20 --data_idx_dir=${DATA_DIR}/dali_idx \
     --results_dir=${WORKSPACE}/results --weight_init=fan_in ${OTHER} | tee -a TF_Classification.run.log.${CURRENTDATE}
+# end timing
+end=$(date +%s)
+end_fmt=$(date +%Y-%m-%d\ %r)
+echo "ENDING TIMING RUN AT $end_fmt"  | tee -a run.log.${CURRENTDATE}
